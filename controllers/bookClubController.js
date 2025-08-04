@@ -149,10 +149,41 @@ exports.joinBookClub = async (req, res) => {
 };
 
 exports.rsvpToMeeting = async (req, res) => {
-  // const { clubId } = req.params;
-  // const { rsvpStatus } = req.body; // 'attending', 'maybe', 'not_attending'
-  // UPDATE MEMBER'S RSVP STATUS
-  // CREATE NOTIFICATION FOR CLUB ADMIN
+  const clubId = req.params.clubId;
+  const userId = req.user._id;
+  const { rsvpStatus } = req.body; // e.g. "going", "not going", "maybe"
+  try {
+    const club = await BookClub.findById(clubId);
+    if (!club) {
+      return res.status(404).json({ message: "Book club not found" });
+    }
+    // validate rsvpStatus
+    const validStatuses = ["attending", "maybe", "not_attending", "pending"];
+    if (!validStatuses.includes(rsvpStatus)) {
+      return res.status(400).json({ message: "Invalid RSVP status" });
+    }
+
+    // update user's RSVP status
+    await BookClub.updateOne(
+      { _id: clubId, "members.userId": userId },
+      { $set: { "members.$.rsvpStatus": rsvpStatus } }
+    );
+    // create notification for club admin
+    await Notification.create({
+      recipient: club.creator,
+      type: "event_rsvp",
+      title: "RSVP Update",
+      message: `${req.user.username} has updated their RSVP status to "${rsvpStatus}" for the meeting.`,
+      relatedBookClub: clubId,
+    });
+    res.status(200).json({
+      message: "RSVP updated successfully",
+      club,
+    });
+  } catch (error) {
+    console.error("Error RSVPing to meeting:", error);
+    return res.status(500).json({ message: "Failed to RSVP to meeting" });
+  }
   // EMIT SOCKET EVENT FOR REAL-TIME UPDATE
 };
 
