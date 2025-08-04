@@ -1,23 +1,6 @@
-// PSEUDO CODE - controllers/bookClubController.js
-
 const BookClub = require("../models/BookClub");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
-
-const getClubById = async (clubId) => {
-  if (!mongoose.Types.ObjectId.isValid(clubId)) {
-    throw new Error("Invalid club ID");
-  }
-  const club = await BookClub.findById(clubId);
-  return club;
-};
-
-const isUserAdmin = async (userId, clubId) => {
-  const club = await getClubById(clubId);
-  return club.members.some(
-    (member) => member.userId.toString() === userId && member.role === "admin"
-  );
-};
 
 // GET ALL BOOK CLUBS (SWISS LOCATION FILTERING):
 exports.getAllBookClubs = async (req, res) => {
