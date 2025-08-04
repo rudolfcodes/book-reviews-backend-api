@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema({
   // Event relationships
   eventsCreated: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
   eventsAttending: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
+
+  // Profile details
+  avatar: { type: String, default: "default-avatar.png" },
+  bio: { type: String, maxlength: 500 },
+  location: {
+    city: { type: String },
+    country: { type: String },
+  },
+  language: { type: String, enum: ["en", "de", "fr"], default: "en" },
 });
 
 const User = mongoose.model("User", userSchema);
