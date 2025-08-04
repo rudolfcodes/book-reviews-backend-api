@@ -187,10 +187,43 @@ exports.rsvpToMeeting = async (req, res) => {
   // EMIT SOCKET EVENT FOR REAL-TIME UPDATE
 };
 
-// GET CLUB MEMBERS:
 exports.getClubMembers = async (req, res) => {
-  // RETURN POPULATED MEMBERS WITH USER DETAILS
-  // RESPECT PRIVACY SETTINGS
+  try {
+    const clubId = req.params.clubId;
+
+    const club = await BookClub.findById(clubId).populate({
+      path: "members.userId",
+      select: "username avatar",
+    });
+
+    if (!club) {
+      return res.status(404).json({ message: "Book club not found" });
+    }
+
+    const isMember = club.members.some((member) =>
+      member.userId._id.equals(req.user._id)
+    );
+
+    const members = club.members.map((member) => ({
+      userId: member.userId,
+      role: member.role,
+      username: member.userId.username,
+      avatar: member.userId.avatar,
+      rsvpStatus: member.rsvpStatus || "pending",
+      joinedAt: member.joinedAt,
+    }));
+
+    if (!isMember && club.isPrivate) {
+      return res
+        .status(403)
+        .json({ message: "You must be a member to view members" });
+    }
+
+    res.status(200).json({ members });
+  } catch (error) {
+    console.error("Error fetching club members:", error);
+    return res.status(500).json({ message: "Failed to fetch club members" });
+  }
 };
 
 // UPDATE CLUB DETAILS (ADMIN ONLY):
