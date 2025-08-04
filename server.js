@@ -17,12 +17,7 @@ const { MONGO_URI, PORT = 5000 } = process.env;
 
 mongoose.connect(MONGO_URI);
 
-const bookRoutes = require("./routes/bookRoutes");
 const userRoutes = require("./routes/userRoutes");
-const quoteRoutes = require("./routes/quoteRoutes");
-const searchRoutes = require("./routes/searchRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
-const genreRoutes = require("./routes/genreRoutes");
 
 // Swagger Documentation
 app.use(
@@ -42,12 +37,7 @@ app.use(
 );
 
 app.use(errorHandler);
-app.use("/api/books", bookRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/quotes", quoteRoutes);
-app.use("/api/search", searchRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/genres", genreRoutes);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
