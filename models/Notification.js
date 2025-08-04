@@ -14,13 +14,10 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: [
-        "book_club_invite",
-        "book_club_rsvp",
-        "swap_request",
-        "swap_accepted",
-        "swap_declined",
+        "club_invite",
+        "event_rsvp",
+        "event_reminder",
         "chat_message",
-        "meeting_reminder",
         "system_announcement",
       ],
       required: true,
@@ -30,10 +27,6 @@ const notificationSchema = new mongoose.Schema(
     relatedBookClub: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BookClub",
-    },
-    relatedBookSwap: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "BookSwap",
     },
     isRead: { type: Boolean, default: false },
     readAt: { type: Date },
