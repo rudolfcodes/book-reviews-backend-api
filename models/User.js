@@ -4,11 +4,14 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: false, unique: true },
   password: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  favoriteBooks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
-  wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
-  reviews: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Review", default: [] },
-  ],
+
+  // Club relationships
+  clubsJoined: [{ type: mongoose.Schema.Types.ObjectId, ref: "Club" }],
+  clubsCreated: [{ type: mongoose.Schema.Types.ObjectId, ref: "Club" }],
+
+  // Event relationships
+  eventsCreated: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
+  eventsAttending: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
 });
 
 const User = mongoose.model("User", userSchema);
