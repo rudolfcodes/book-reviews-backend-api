@@ -228,9 +228,76 @@ exports.getClubMembers = async (req, res) => {
 
 // UPDATE CLUB DETAILS (ADMIN ONLY):
 exports.updateBookClub = async (req, res) => {
-  // VERIFY USER IS ADMIN
-  // UPDATE ALLOWED FIELDS
-  // NOTIFY MEMBERS OF CHANGES
+  try {
+    // User can only update book club if they are the creator/admin
+    const clubId = req.params.clubId;
+
+    const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(clubId)) {
+      return res.status(400).json({ message: "Invalid club ID" });
+    }
+
+    const club = await BookClub.findById(clubId);
+    if (!club) {
+      return res.status(404).json({ message: "Book club not found" });
+    }
+
+    // Check if user is admin or creator
+    const isAdmin = club.members.some(
+      (member) => member.userId.equals(userId) && member.role === "admin"
+    );
+
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Only admins can update club details" });
+    }
+
+    const updateData = Object.fromEntries(
+      Object.entries(req.body).filter(([key]) =>
+        [
+          "name",
+          "description",
+          "location",
+          "category",
+          "language",
+          "isPrivate",
+          "meetingFrequency",
+        ].includes(key)
+      )
+    );
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
+    await BookClub.updateOne({ _id: clubId }, { $set: updateData });
+
+    // Notify all members about the update
+    const notifications = club.members
+      .filter((member) => !member.userId.equals(userId))
+      .map((member) => ({
+        recipient: member.userId,
+        type: "system_announcement",
+        title: "Book Club Updated",
+        message: `${req.user.username} has updated the book club "${club.name}".`,
+        relatedBookClub: clubId,
+      }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    const updatedClub = await BookClub.findById(clubId);
+    res.status(200).json({
+      message: "Book club updated successfully",
+      club: updatedClub,
+    });
+  } catch (error) {
+    console.error("Error updating book club:", error);
+    return res.status(500).json({ message: "Failed to update book club" });
+  }
 };
 
 // DELETE/DEACTIVATE CLUB (ADMIN ONLY):
