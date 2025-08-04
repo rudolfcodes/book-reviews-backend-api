@@ -35,7 +35,66 @@ exports.getAllBookClubs = async (req, res) => {
 };
 
 // CREATE BOOK CLUB:
-exports.createBookClub = async (req, res) => {};
+exports.createBookClub = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      location,
+      category,
+      language,
+      isPrivate,
+      meetingFrequency,
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !description || !location) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Check if club with same name already exists
+    const existingClub = await BookClub.findOne({
+      name: new RegExp(`^${name}$`, "i"), // Case-insensitive match
+      "location.city": location.city,
+    });
+    if (existingClub) {
+      return res.status(400).json({
+        message: "A club with this name already exists in this city.",
+      });
+    }
+
+    const userId = req.user._id; // Assuming user is authenticated
+    const newClub = new BookClub({
+      name,
+      description,
+      location,
+      category,
+      language,
+      isPrivate,
+      meetingFrequency,
+      creator: userId,
+    });
+    newClub.members.push({ userId, role: "admin" }); // Add creator as admin
+    await newClub.save();
+    // update user's clubs membership
+    await User.findByIdAndUpdate(userId, {
+      $push: { clubsJoined: newClub._id, clubsCreated: newClub._id },
+    });
+
+    // Notify creator about successful club creation
+    await Notification.create({
+      recipient: userId,
+      type: "system_announcement",
+      title: "Book Club Created",
+      message: `You have successfully created the book club "${name}".`,
+      relatedBookClub: newClub._id,
+    });
+    res.status(201).json(newClub);
+  } catch (error) {
+    console.error("Error creating book club:", error);
+    return res.status(500).json({ message: "Failed to create book club" });
+  }
+};
 
 // JOIN BOOK CLUB:
 exports.joinBookClub = async (req, res) => {
