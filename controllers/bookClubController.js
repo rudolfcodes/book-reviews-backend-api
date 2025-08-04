@@ -96,15 +96,58 @@ exports.createBookClub = async (req, res) => {
   }
 };
 
-// JOIN BOOK CLUB:
 exports.joinBookClub = async (req, res) => {
-  // CHECK IF ALREADY MEMBER
-  // ADD TO MEMBERS ARRAY
-  // UPDATE USER'S MEMBERSHIPS
-  // CREATE NOTIFICATION FOR CLUB ADMIN
+  try {
+    const clubId = req.params.clubId;
+    const userId = req.user._id;
+    const club = await BookClub.findById(clubId);
+    if (!club) {
+      return res.status(404).json({ message: "Book club not found" });
+    }
+    if (club.members.some((member) => member.userId.toString() === userId)) {
+      return res.status(400).json({ message: "Already a member of this club" });
+    }
+
+    // check if club is private
+    if (club.isPrivate) {
+      return res.status(403).json({ message: "This club is private" });
+    }
+    // check if club is active
+    if (club.status !== "active") {
+      return res.status(403).json({ message: "This club is not active" });
+    }
+
+    // check member limit
+    if (club.maxMembers && club.members.length >= club.maxMembers) {
+      return res.status(403).json({ message: "Member limit reached" });
+    }
+
+    club.members.push({ userId, role: "member" });
+    await club.save();
+    // UPDATE USER'S MEMBERSHIPS
+    await User.findByIdAndUpdate(userId, {
+      $push: { clubsJoined: clubId },
+    });
+    // CREATE NOTIFICATION FOR CLUB ADMIN
+    await Notification.create({
+      recipient: club.creator,
+      type: "system_announcement",
+      title: "New Member Joined",
+      message: `${req.user.username} has joined your book club "${club.name}".`,
+      relatedBookClub: clubId,
+    });
+
+    // return response
+    res.status(200).json({
+      message: "Successfully joined book club",
+      club,
+    });
+  } catch (error) {
+    console.error("Error joining book club:", error);
+    return res.status(500).json({ message: "Failed to join book club" });
+  }
 };
 
-// RSVP TO MEETING:
 exports.rsvpToMeeting = async (req, res) => {
   // const { clubId } = req.params;
   // const { rsvpStatus } = req.body; // 'attending', 'maybe', 'not_attending'
