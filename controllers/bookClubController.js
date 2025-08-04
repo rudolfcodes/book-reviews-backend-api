@@ -4,6 +4,21 @@ const BookClub = require("../models/BookClub");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 
+const getClubById = async (clubId) => {
+  if (!mongoose.Types.ObjectId.isValid(clubId)) {
+    throw new Error("Invalid club ID");
+  }
+  const club = await BookClub.findById(clubId);
+  return club;
+};
+
+const isUserAdmin = async (userId, clubId) => {
+  const club = await getClubById(clubId);
+  return club.members.some(
+    (member) => member.userId.toString() === userId && member.role === "admin"
+  );
+};
+
 // GET ALL BOOK CLUBS (SWISS LOCATION FILTERING):
 exports.getAllBookClubs = async (req, res) => {
   try {
@@ -34,7 +49,6 @@ exports.getAllBookClubs = async (req, res) => {
   }
 };
 
-// CREATE BOOK CLUB:
 exports.createBookClub = async (req, res) => {
   try {
     const {
@@ -100,10 +114,13 @@ exports.joinBookClub = async (req, res) => {
   try {
     const clubId = req.params.clubId;
     const userId = req.user._id;
-    const club = await BookClub.findById(clubId);
+
+    const club = await getClubById(clubId);
+
     if (!club) {
       return res.status(404).json({ message: "Book club not found" });
     }
+
     if (club.members.some((member) => member.userId.toString() === userId)) {
       return res.status(400).json({ message: "Already a member of this club" });
     }
@@ -153,10 +170,11 @@ exports.rsvpToMeeting = async (req, res) => {
   const userId = req.user._id;
   const { rsvpStatus } = req.body; // e.g. "going", "not going", "maybe"
   try {
-    const club = await BookClub.findById(clubId);
+    const club = await getClubById(clubId);
     if (!club) {
       return res.status(404).json({ message: "Book club not found" });
     }
+
     // validate rsvpStatus
     const validStatuses = ["attending", "maybe", "not_attending", "pending"];
     if (!validStatuses.includes(rsvpStatus)) {
@@ -226,27 +244,18 @@ exports.getClubMembers = async (req, res) => {
   }
 };
 
-// UPDATE CLUB DETAILS (ADMIN ONLY):
 exports.updateBookClub = async (req, res) => {
   try {
     // User can only update book club if they are the creator/admin
     const clubId = req.params.clubId;
-
     const userId = req.user._id;
+    const club = await getClubById(clubId);
 
-    if (!mongoose.Types.ObjectId.isValid(clubId)) {
-      return res.status(400).json({ message: "Invalid club ID" });
-    }
-
-    const club = await BookClub.findById(clubId);
     if (!club) {
       return res.status(404).json({ message: "Book club not found" });
     }
 
-    // Check if user is admin or creator
-    const isAdmin = club.members.some(
-      (member) => member.userId.equals(userId) && member.role === "admin"
-    );
+    const isAdmin = await isUserAdmin(userId, clubId);
 
     if (!isAdmin) {
       return res
@@ -300,10 +309,58 @@ exports.updateBookClub = async (req, res) => {
   }
 };
 
-// DELETE/DEACTIVATE CLUB (ADMIN ONLY):
 exports.deleteBookClub = async (req, res) => {
-  // VERIFY USER IS ADMIN
-  // SET isActive: false
-  // NOTIFY ALL MEMBERS
-  // CLEAN UP CHAT MESSAGES (OPTIONAL)
+  try {
+    const clubId = req.params.clubId;
+    const userId = req.user._id;
+
+    const club = await getClubById(clubId);
+    if (!club) {
+      return res.status(404).json({ message: "Book club not found" });
+    }
+
+    const isAdmin = await isUserAdmin(userId, clubId);
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Only admins can delete this club" });
+    }
+
+    // notify all members about club deletion
+    const notifications = club.members
+      .filter((member) => !member.userId.equals(userId))
+      .map((member) => ({
+        recipient: member.userId,
+        type: "system_announcement",
+        title: "Book Club Deleted",
+        message: `${req.user.username} has deleted the book club "${club.name}".`,
+        relatedBookClub: clubId,
+      }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    // update user's clubsCreated and clubsJoined
+    const memberIds = club.members.map((member) => member.userId);
+    await User.updateMany(
+      { _id: { $in: memberIds } },
+      {
+        $pull: { clubsJoined: clubId },
+      }
+    );
+
+    await User.updateOne({ _id: userId }, { $pull: { clubsCreated: clubId } });
+
+    // delete bookclub
+    await BookClub.findByIdAndDelete(clubId);
+
+    res.status(200).json({
+      message: "Book club deleted successfully",
+      clubId,
+    });
+  } catch (error) {
+    console.error("Error deleting book club:", error);
+    return res.status(500).json({ message: "Failed to delete book club" });
+  }
 };
