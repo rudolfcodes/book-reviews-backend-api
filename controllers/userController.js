@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Book = require("../models/Book");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
 const nodemailer = require("nodemailer");
@@ -142,17 +143,6 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-exports.addReviews = async (req, res) => {
-  try {
-    await User.updateMany(
-      { reviews: { $exists: false } },
-      { $set: { reviews: [] } }
-    );
-  } catch (error) {
-    console.log("could not add reviews property");
-  }
-};
-
 // Get user profile
 exports.getUserProfile = async (req, res) => {
   try {
@@ -167,61 +157,5 @@ exports.getUserProfile = async (req, res) => {
   } catch (error) {
     console.error("No user found:", error);
     res.status(500).json({ error: "Failed to fetch user profile" });
-  }
-};
-
-// Add book to wishlist
-exports.addToWishlist = async (req, res) => {
-  try {
-    // get userId from req params
-    const { userId } = req.params;
-    // get bookId from body
-    const { bookId } = req.body;
-    // get user by id
-    const user = await User.findById(userId);
-    // if wishlist does not include book with this bookId
-    if (!user.wishlist.includes(bookId)) {
-      // push it into the user wishlist
-      user.wishlist.push(bookId);
-      // save user to db
-      await user.save();
-    }
-    // send user response
-    res.json(user);
-  } catch (error) {
-    console.log("Error adding book to wishlist:", error);
-    res.status(500).json({ error: "Could not add book to wishlist" });
-  }
-};
-
-exports.removeFromWishlist = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { bookId } = req.body;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    user.wishlist = user.wishlist.filter((id) => id.toString() !== bookId);
-    await user.save();
-
-    res.status(200).json({ message: "Book removed from wishlist" });
-  } catch (error) {
-    console.log("Error removing book from wishlist:", error);
-    res.status(500).json({ error: "Could not remove book from wishlist" });
-  }
-};
-
-// Get user wishlist
-exports.getWishlist = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId).populate("wishlist");
-    if (!user) {
-      return res.status(404).json({ error: "No user found" });
-    }
-    res.json(user.wishlist);
-  } catch (error) {
-    console.error("Error getting the wishlist:", error);
-    res.status(500).json({ error: "Could not get wishlist" });
   }
 };
