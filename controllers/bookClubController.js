@@ -1,4 +1,3 @@
-const BookClub = require("../models/BookClub");
 const User = require("../models/User");
 const notificationService = require("../services/notificationService");
 const { sendSuccess, sendError } = require("../utils/responseHelper");
@@ -68,13 +67,7 @@ exports.rsvpToMeeting = async (req, res) => {
     const { rsvpStatus } = req.body; // e.g. "going", "not going", "maybe"
     const club = await clubService.getClubById(clubId);
 
-    // validate rsvpStatus
-    const validStatuses = ["attending", "maybe", "not_attending", "pending"];
-    if (!validStatuses.includes(rsvpStatus)) {
-      return res.status(400).json({ message: "Invalid RSVP status" });
-    }
-
-    await clubService.updateRsvpStatus(userId, clubId, rsvpStatus);
+    await clubService.rsvpToMeeting(userId, clubId, rsvpStatus);
 
     // create notification for club admin
     await notificationService.createNotification({
@@ -94,32 +87,11 @@ exports.rsvpToMeeting = async (req, res) => {
 exports.getClubMembers = async (req, res) => {
   try {
     const clubId = req.params.clubId;
-
-    const club = await clubService.getClubById(clubId).populate({
-      path: "members.userId",
-      select: "username avatar",
-    });
-
-    const isMember = clubService.checkMembership(req.user._id, clubId);
-
-    const members = club.members.map((member) => ({
-      userId: member.userId,
-      role: member.role,
-      username: member.userId.username,
-      avatar: member.userId.avatar,
-      rsvpStatus: member.rsvpStatus || "pending",
-      joinedAt: member.joinedAt,
-    }));
-
-    if (!isMember && club.isPrivate) {
-      return res
-        .status(403)
-        .json({ message: "You must be a member to view members" });
-    }
+    const members = await clubService.getClubMembers(clubId, req.user._id);
 
     sendSuccess(res, members, "Club members fetched successfully", 200);
   } catch (error) {
-    return sendError(res, error, 500, "Failed to fetch club members");
+    return sendError(res, error.message, 403, "Failed to fetch club members");
   }
 };
 
@@ -128,38 +100,10 @@ exports.updateBookClub = async (req, res) => {
     // User can only update book club if they are the creator/admin
     const clubId = req.params.clubId;
     const userId = req.user._id;
-    const club = await clubService.getClubById(clubId);
-
-    const isAdmin = await clubService.isUserAdmin(userId, clubId);
-
-    if (!isAdmin) {
-      return res
-        .status(403)
-        .json({ message: "Only admins can update club details" });
-    }
-
-    const updateData = Object.fromEntries(
-      Object.entries(req.body).filter(([key]) =>
-        [
-          "name",
-          "description",
-          "location",
-          "category",
-          "language",
-          "isPrivate",
-          "meetingFrequency",
-        ].includes(key)
-      )
-    );
-
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ message: "No valid fields to update" });
-    }
-
-    await BookClub.updateOne({ _id: clubId }, { $set: updateData });
+    const club = await clubService.updateClub(clubId, userId, req.body);
 
     // Notify all members about the update
-    const notifications = await notificationService.notifyClubUpdated(
+    await notificationService.notifyClubUpdated(
       club.members,
       userId,
       req.user.username,
@@ -168,11 +112,6 @@ exports.updateBookClub = async (req, res) => {
     );
 
     await notificationService.createBulkNotifications(notifications);
-
-    await clubService.updateClubMembers(
-      club.members.map((member) => member.userId.toString()),
-      clubId
-    );
 
     sendSuccess(res, null, "Book club updated successfully", 200);
   } catch (error) {
@@ -184,38 +123,16 @@ exports.deleteBookClub = async (req, res) => {
   try {
     const clubId = req.params.clubId;
     const userId = req.user._id;
-
-    const club = await clubService.getClubById(clubId);
-
-    const isAdmin = await clubService.isUserAdmin(userId, clubId);
-    if (!isAdmin) {
-      return res
-        .status(403)
-        .json({ message: "Only admins can delete this club" });
-    }
+    const club = await clubService.deleteClub(clubId, userId);
 
     // notify all members about club deletion
-    const notifications = await notificationService.notifyClubDeleted(
+    await notificationService.notifyClubDeleted(
       club.members,
       userId,
       club.name
     );
 
     await notificationService.createBulkNotifications(notifications);
-
-    // update user's clubsCreated and clubsJoined
-    const memberIds = club.members.map((member) => member.userId);
-    await User.updateMany(
-      { _id: { $in: memberIds } },
-      {
-        $pull: { clubsJoined: clubId },
-      }
-    );
-
-    await User.updateOne({ _id: userId }, { $pull: { clubsCreated: clubId } });
-
-    // delete bookclub
-    await BookClub.findByIdAndDelete(clubId);
 
     sendSuccess(res, null, "Book club deleted successfully", 200);
   } catch (error) {
