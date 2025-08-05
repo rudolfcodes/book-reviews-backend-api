@@ -124,30 +124,6 @@ class ClubService {
       (member) => member.userId.toString() === userId && member.role === "admin"
     );
   }
-
-  async rsvpToMeeting(userId, clubId, rsvpStatus) {
-    // validate rsvpStatus
-    const validStatuses = ["attending", "maybe", "not_attending", "pending"];
-    if (!validStatuses.includes(rsvpStatus)) {
-      return res.status(400).json({ message: "Invalid RSVP status" });
-    }
-
-    await this.updateRsvpStatus(userId, clubId, rsvpStatus);
-    return await this.getClubById(clubId);
-  }
-
-  async updateRsvpStatus(userId, clubId, rsvpStatus) {
-    validateObjectId(clubId, "Club ID");
-    const club = await this.getClubById(clubId);
-
-    await BookClub.updateOne(
-      { _id: clubId, "members.userId": userId },
-      { $set: { "members.$.rsvpStatus": rsvpStatus } }
-    );
-
-    await club.save();
-    return club;
-  }
 }
 
 module.exports = new ClubService();
