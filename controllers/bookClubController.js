@@ -1,8 +1,10 @@
 const BookClub = require("../models/BookClub");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
+const notificationService = require("../services/notificationService");
+const { sendSuccess, sendError } = require("../utils/responseHelper");
+const clubService = require("../services/clubService");
 
-// GET ALL BOOK CLUBS (SWISS LOCATION FILTERING):
 exports.getAllBookClubs = async (req, res) => {
   try {
     // list all book clubs with optional filters
@@ -79,17 +81,11 @@ exports.createBookClub = async (req, res) => {
     });
 
     // Notify creator about successful club creation
-    await Notification.create({
-      recipient: userId,
-      type: "system_announcement",
-      title: "Book Club Created",
-      message: `You have successfully created the book club "${name}".`,
-      relatedBookClub: newClub._id,
-    });
-    res.status(201).json(newClub);
+    await notificationService.notifyClubCreated(userId, newClub._id, name);
+
+    sendSuccess(res, newClub, "Book club created successfully", 201);
   } catch (error) {
-    console.error("Error creating book club:", error);
-    return res.status(500).json({ message: "Failed to create book club" });
+    return sendError(res, error, 500, "Failed to create book club");
   }
 };
 
@@ -98,53 +94,50 @@ exports.joinBookClub = async (req, res) => {
     const clubId = req.params.clubId;
     const userId = req.user._id;
 
-    const club = await getClubById(clubId);
-
-    if (!club) {
-      return res.status(404).json({ message: "Book club not found" });
-    }
+    const club = await clubService.getClubById(clubId);
 
     if (club.members.some((member) => member.userId.toString() === userId)) {
       return res.status(400).json({ message: "Already a member of this club" });
     }
 
+    // check if already member
+    if (await clubService.checkMembership(userId, clubId)) {
+      return sendError(res, null, 400, "Already a member of this club");
+    }
+
     // check if club is private
     if (club.isPrivate) {
-      return res.status(403).json({ message: "This club is private" });
+      return sendError(res, null, 403, "This club is private");
     }
     // check if club is active
     if (club.status !== "active") {
-      return res.status(403).json({ message: "This club is not active" });
+      return sendError(res, null, 403, "This club is not active");
     }
 
     // check member limit
     if (club.maxMembers && club.members.length >= club.maxMembers) {
-      return res.status(403).json({ message: "Member limit reached" });
+      return sendError(res, null, 403, "Member limit reached");
     }
 
-    club.members.push({ userId, role: "member" });
-    await club.save();
+    // add user to club
+    await clubService.addMemberToClub(userId, clubId);
+
     // UPDATE USER'S MEMBERSHIPS
     await User.findByIdAndUpdate(userId, {
       $push: { clubsJoined: clubId },
     });
-    // CREATE NOTIFICATION FOR CLUB ADMIN
-    await Notification.create({
-      recipient: club.creator,
-      type: "system_announcement",
-      title: "New Member Joined",
-      message: `${req.user.username} has joined your book club "${club.name}".`,
-      relatedBookClub: clubId,
-    });
 
-    // return response
-    res.status(200).json({
-      message: "Successfully joined book club",
-      club,
-    });
+    // CREATE NOTIFICATION FOR CLUB ADMIN
+    await notificationService.notifyMemberJoined(
+      club.creator,
+      req.user.username,
+      club.name,
+      clubId
+    );
+
+    sendSuccess(res, club, "Successfully joined book club", 200);
   } catch (error) {
-    console.error("Error joining book club:", error);
-    return res.status(500).json({ message: "Failed to join book club" });
+    sendError(res, error, 500, "Failed to join book club");
   }
 };
 
@@ -153,10 +146,7 @@ exports.rsvpToMeeting = async (req, res) => {
   const userId = req.user._id;
   const { rsvpStatus } = req.body; // e.g. "going", "not going", "maybe"
   try {
-    const club = await getClubById(clubId);
-    if (!club) {
-      return res.status(404).json({ message: "Book club not found" });
-    }
+    const club = await clubService.getClubById(clubId);
 
     // validate rsvpStatus
     const validStatuses = ["attending", "maybe", "not_attending", "pending"];
@@ -170,20 +160,16 @@ exports.rsvpToMeeting = async (req, res) => {
       { $set: { "members.$.rsvpStatus": rsvpStatus } }
     );
     // create notification for club admin
-    await Notification.create({
+    await notificationService.createNotification({
       recipient: club.creator,
       type: "event_rsvp",
       title: "RSVP Update",
       message: `${req.user.username} has updated their RSVP status to "${rsvpStatus}" for the meeting.`,
       relatedBookClub: clubId,
     });
-    res.status(200).json({
-      message: "RSVP updated successfully",
-      club,
-    });
+    sendSuccess(res, club, "RSVP updated successfully", 200);
   } catch (error) {
-    console.error("Error RSVPing to meeting:", error);
-    return res.status(500).json({ message: "Failed to RSVP to meeting" });
+    return sendError(res, error, 500, "Failed to RSVP to meeting");
   }
   // EMIT SOCKET EVENT FOR REAL-TIME UPDATE
 };
@@ -192,18 +178,12 @@ exports.getClubMembers = async (req, res) => {
   try {
     const clubId = req.params.clubId;
 
-    const club = await BookClub.findById(clubId).populate({
+    const club = await clubService.getClubById(clubId).populate({
       path: "members.userId",
       select: "username avatar",
     });
 
-    if (!club) {
-      return res.status(404).json({ message: "Book club not found" });
-    }
-
-    const isMember = club.members.some((member) =>
-      member.userId._id.equals(req.user._id)
-    );
+    const isMember = clubService.checkMembership(req.user._id, clubId);
 
     const members = club.members.map((member) => ({
       userId: member.userId,
@@ -220,10 +200,9 @@ exports.getClubMembers = async (req, res) => {
         .json({ message: "You must be a member to view members" });
     }
 
-    res.status(200).json({ members });
+    sendSuccess(res, members, "Club members fetched successfully", 200);
   } catch (error) {
-    console.error("Error fetching club members:", error);
-    return res.status(500).json({ message: "Failed to fetch club members" });
+    return sendError(res, error, 500, "Failed to fetch club members");
   }
 };
 
@@ -232,13 +211,9 @@ exports.updateBookClub = async (req, res) => {
     // User can only update book club if they are the creator/admin
     const clubId = req.params.clubId;
     const userId = req.user._id;
-    const club = await getClubById(clubId);
+    const club = await clubService.getClubById(clubId);
 
-    if (!club) {
-      return res.status(404).json({ message: "Book club not found" });
-    }
-
-    const isAdmin = await isUserAdmin(userId, clubId);
+    const isAdmin = await clubService.isUserAdmin(userId, clubId);
 
     if (!isAdmin) {
       return res
@@ -267,28 +242,24 @@ exports.updateBookClub = async (req, res) => {
     await BookClub.updateOne({ _id: clubId }, { $set: updateData });
 
     // Notify all members about the update
-    const notifications = club.members
-      .filter((member) => !member.userId.equals(userId))
-      .map((member) => ({
-        recipient: member.userId,
-        type: "system_announcement",
-        title: "Book Club Updated",
-        message: `${req.user.username} has updated the book club "${club.name}".`,
-        relatedBookClub: clubId,
-      }));
+    const notifications = await notificationService.notifyClubUpdated(
+      club.members,
+      userId,
+      req.user.username,
+      club.name,
+      clubId
+    );
 
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
-    }
+    await notificationService.createBulkNotifications(notifications);
 
-    const updatedClub = await BookClub.findById(clubId);
-    res.status(200).json({
-      message: "Book club updated successfully",
-      club: updatedClub,
-    });
+    await clubService.updateClubMembers(
+      club.members.map((member) => member.userId.toString()),
+      clubId
+    );
+
+    sendSuccess(res, null, "Book club updated successfully", 200);
   } catch (error) {
-    console.error("Error updating book club:", error);
-    return res.status(500).json({ message: "Failed to update book club" });
+    return sendError(res, error, 500, "Failed to update book club");
   }
 };
 
@@ -297,12 +268,9 @@ exports.deleteBookClub = async (req, res) => {
     const clubId = req.params.clubId;
     const userId = req.user._id;
 
-    const club = await getClubById(clubId);
-    if (!club) {
-      return res.status(404).json({ message: "Book club not found" });
-    }
+    const club = await clubService.getClubById(clubId);
 
-    const isAdmin = await isUserAdmin(userId, clubId);
+    const isAdmin = await clubService.isUserAdmin(userId, clubId);
     if (!isAdmin) {
       return res
         .status(403)
@@ -310,19 +278,13 @@ exports.deleteBookClub = async (req, res) => {
     }
 
     // notify all members about club deletion
-    const notifications = club.members
-      .filter((member) => !member.userId.equals(userId))
-      .map((member) => ({
-        recipient: member.userId,
-        type: "system_announcement",
-        title: "Book Club Deleted",
-        message: `${req.user.username} has deleted the book club "${club.name}".`,
-        relatedBookClub: clubId,
-      }));
+    const notifications = await notificationService.notifyClubDeleted(
+      club.members,
+      userId,
+      club.name
+    );
 
-    if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
-    }
+    await notificationService.createBulkNotifications(notifications);
 
     // update user's clubsCreated and clubsJoined
     const memberIds = club.members.map((member) => member.userId);
@@ -338,12 +300,8 @@ exports.deleteBookClub = async (req, res) => {
     // delete bookclub
     await BookClub.findByIdAndDelete(clubId);
 
-    res.status(200).json({
-      message: "Book club deleted successfully",
-      clubId,
-    });
+    sendSuccess(res, null, "Book club deleted successfully", 200);
   } catch (error) {
-    console.error("Error deleting book club:", error);
-    return res.status(500).json({ message: "Failed to delete book club" });
+    return sendError(res, error, 500, "Failed to delete book club");
   }
 };
