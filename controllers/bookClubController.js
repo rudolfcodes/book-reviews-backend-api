@@ -133,7 +133,7 @@ exports.leaveBookClub = async (req, res) => {
     const clubId = req.params.clubId;
     const userId = req.user._id;
 
-    const club = await clubService.leaveClub(userId, clubId);
+    const club = await clubService.leaveBookClub(userId, clubId);
 
     // Notify admin about member leaving
     await notificationService.createNotification({
