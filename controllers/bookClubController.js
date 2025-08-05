@@ -128,6 +128,28 @@ exports.updateBookClub = async (req, res) => {
   }
 };
 
+exports.leaveBookClub = async (req, res) => {
+  try {
+    const clubId = req.params.clubId;
+    const userId = req.user._id;
+
+    const club = await clubService.leaveClub(userId, clubId);
+
+    // Notify admin about member leaving
+    await notificationService.createNotification({
+      recipient: club.creator,
+      type: "system_announcement",
+      title: "Member Left",
+      message: `${req.user.username} has left the book club "${club.name}".`,
+      relatedBookClub: clubId,
+    });
+
+    sendSuccess(res, null, "Left book club successfully", 200);
+  } catch (error) {
+    return sendError(res, error, 500, "Failed to leave book club");
+  }
+};
+
 exports.deleteBookClub = async (req, res) => {
   try {
     const clubId = req.params.clubId;

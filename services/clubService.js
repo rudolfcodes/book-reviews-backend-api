@@ -118,6 +118,21 @@ class ClubService {
     return club;
   }
 
+  async leaveBookClub(userId, clubId) {
+    validateObjectId(clubId, "Club ID");
+    const club = await this.getClubById(clubId);
+
+    if (!club.members.some((member) => member.userId.toString() === userId)) {
+      throw new Error("User is not a member of this club");
+    }
+
+    club.members = club.members.filter(
+      (member) => member.userId.toString() !== userId
+    );
+
+    await club.save();
+  }
+
   async isUserAdmin(userId, clubId) {
     const club = await this.getClubById(clubId);
     return club.members.some(
