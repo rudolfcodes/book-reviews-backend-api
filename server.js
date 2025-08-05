@@ -18,6 +18,7 @@ const { MONGO_URI, PORT = 5000 } = process.env;
 mongoose.connect(MONGO_URI);
 
 const userRoutes = require("./routes/userRoutes");
+const bookClubRoutes = require("./routes/bookClubRoutes");
 
 // Swagger Documentation
 app.use(
@@ -38,6 +39,7 @@ app.use(
 
 app.use(errorHandler);
 app.use("/api/users", userRoutes);
+app.use("/api/bookclubs", bookClubRoutes);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
