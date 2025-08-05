@@ -1,4 +1,3 @@
-const User = require("../models/User");
 const notificationService = require("../services/notificationService");
 const { sendSuccess, sendError } = require("../utils/responseHelper");
 const clubService = require("../services/clubService");
@@ -16,6 +15,16 @@ exports.getAllBookClubs = async (req, res) => {
     sendSuccess(res, bookClubs, "Book clubs fetched successfully", 200);
   } catch (error) {
     sendError(res, error, 500, "Failed to fetch book clubs");
+  }
+};
+
+exports.getBookClubById = async (req, res) => {
+  try {
+    const clubId = req.params.clubId;
+    const bookClub = await clubService.getClubById(clubId);
+    sendSuccess(res, bookClub, "Book club fetched successfully", 200);
+  } catch (error) {
+    sendError(res, error, 500, "Failed to fetch book club");
   }
 };
 
