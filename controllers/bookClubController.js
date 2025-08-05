@@ -112,7 +112,7 @@ exports.updateBookClub = async (req, res) => {
     const club = await clubService.updateClub(clubId, userId, req.body);
 
     // Notify all members about the update
-    await notificationService.notifyClubUpdated(
+    const notifications = await notificationService.notifyClubUpdated(
       club.members,
       userId,
       req.user.username,
