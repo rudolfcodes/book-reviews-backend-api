@@ -7,7 +7,7 @@ class NotificationService {
 
   async createBulkNotifications(notifications) {
     if (notifications.length > 0) {
-      await Notification.insertMany(notifications);
+      return await Notification.insertMany(notifications);
     }
   }
 
