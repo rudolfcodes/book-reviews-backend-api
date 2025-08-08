@@ -1,5 +1,5 @@
 const BookClub = require("../models/BookClub");
-const { validateObjectId } = require("../utils/validationUtils");
+const { validateObjectId } = require("../utils/validation");
 const User = require("../models/User");
 
 class ClubService {
@@ -53,15 +53,15 @@ class ClubService {
     return newClub;
   }
 
-  async updateClub(clubId, updateData) {
-    const isAdmin = await this.isUserAdmin(updateData.userId, clubId);
+  async updateClub(clubId, data) {
+    const isAdmin = await this.isUserAdmin(data.userId, clubId);
 
     if (!isAdmin) {
       throw new Error("Only admins can update club details");
     }
 
     const updateData = Object.fromEntries(
-      Object.entries(updateData).filter(([key]) =>
+      Object.entries(data).filter(([key]) =>
         [
           "name",
           "description",
