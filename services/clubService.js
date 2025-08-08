@@ -3,7 +3,8 @@ const { validateObjectId } = require("../utils/validation");
 const User = require("../models/User");
 
 class ClubService {
-  async getAllClubs(filters, pagination) {
+  async getAllClubs(filters = {}, pagination) {
+    const { page = 1, limit = 10 } = pagination || {};
     const { canton, city, language, category } = filters;
     const filter = {};
 
@@ -12,17 +13,23 @@ class ClubService {
     if (language) filter.language = language;
     if (category) filter.category = category;
 
-    const options = {
-      page: parseInt(pagination.page || 1),
-      limit: parseInt(pagination.limit || 10),
-      sort: { createdAt: -1 }, // newest first
-      populate: {
-        path: "members.userId",
-        select: "username avatar",
-      },
-    };
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const totalDocs = await BookClub.countDocuments(filter);
+    const docs = await BookClub.find(filter)
+      .populate("creator", "username avatar")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
 
-    return await BookClub.paginate(filter, options);
+    return {
+      docs,
+      totalDocs,
+      limit: parseInt(limit),
+      totalPages: Math.ceil(totalDocs / parseInt(limit)),
+      currentPage: parseInt(page),
+      hasNextPage: page < Math.ceil(totalDocs / parseInt(limit)),
+      hasPrevPage: page > 1,
+    };
   }
 
   async doesClubExist(clubName, city) {

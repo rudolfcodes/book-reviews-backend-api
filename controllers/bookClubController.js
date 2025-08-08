@@ -2,18 +2,30 @@ const notificationService = require("../services/notificationService");
 const { sendSuccess, sendError } = require("../utils/responseHelper");
 const clubService = require("../services/clubService");
 
-exports.getAllBookClubs = async (req, res) => {
+exports.getAllBookClubs = async (req, res, next) => {
   try {
-    const bookClubs = await clubService.getAllClubs(
-      req.query,
-      req.query.pagination
-    );
+    const {
+      page = 1,
+      limit = 10,
+      canton,
+      city,
+      language,
+      category,
+    } = req.query;
+
+    const filters = { canton, city, language, category };
+    const options = {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+    };
+    const bookClubs = await clubService.getAllClubs(filters, options);
 
     if (!bookClubs || bookClubs.length === 0) {
       return res.status(404).json({ message: "No book clubs found" });
     }
     sendSuccess(res, bookClubs, "Book clubs fetched successfully", 200);
   } catch (error) {
+    next(error);
     sendError(res, error, 500, "Failed to fetch book clubs");
   }
 };
