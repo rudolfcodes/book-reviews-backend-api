@@ -11,7 +11,7 @@ class NotificationService {
     }
   }
 
-  async notifyClubCreated(userId, clubName, clubId) {
+  async notifyClubCreated(userId, clubId, clubName) {
     return this.createNotification({
       recipient: userId,
       type: "system_announcement",
