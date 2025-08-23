@@ -30,7 +30,33 @@ const bookClubSchema = new mongoose.Schema(
     // MEETING DETAILS:
     meetingTime: Date,
     maxMembers: { type: Number, default: 20 },
-    currentBook: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
+    currentBooks: [
+      {
+        title: String,
+        author: String,
+        isbn: String,
+        language: { type: String, enum: ["en", "de", "fr"], default: "en" },
+        clubProgress: {
+          status: {
+            type: String,
+            enum: ["planned", "reading", "discussing", "completed"],
+            default: "not_started",
+          },
+          startedAt: Date,
+          targetFinishAt: Date,
+          currentChapter: Number,
+        },
+      },
+    ],
+
+    bookHistory: [
+      {
+        title: String,
+        author: String,
+        completedAt: Date,
+        clubRating: Number,
+      },
+    ],
 
     members: [
       {
