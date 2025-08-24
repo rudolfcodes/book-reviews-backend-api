@@ -142,12 +142,10 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-// Get user profile
+// Only for usage for admin/system purposes
 exports.getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).populate(
-      "favoriteBooks wishlist reviews"
-    );
+    const user = await User.findById(req.params.userId);
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -156,5 +154,33 @@ exports.getUserProfile = async (req, res) => {
   } catch (error) {
     console.error("No user found:", error);
     res.status(500).json({ error: "Failed to fetch user profile" });
+  }
+};
+
+exports.getCurrentUserProfile = async (req, res) => {
+  try {
+    const user = req.user;
+    res.json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error("Error fetching current user profile:", error);
+    res.status(500).json({ error: "Failed to fetch current user profile" });
+  }
+};
+
+exports.getUserByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user by username:", error);
+    res.status(500).json({ error: "Failed to fetch user by username" });
   }
 };
