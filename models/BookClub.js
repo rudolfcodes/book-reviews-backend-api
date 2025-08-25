@@ -1,5 +1,3 @@
-// PSEUDO CODE - models/BookClub.js
-
 const mongoose = require("mongoose");
 
 const bookClubSchema = new mongoose.Schema(
@@ -9,13 +7,13 @@ const bookClubSchema = new mongoose.Schema(
     creator: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
 
-    // SWISS LOCATION DATA:
     location: {
       address: String,
       city: String,
-      canton: String, // Swiss cantons
+      canton: String,
       coordinates: {
         lat: Number,
         lng: Number,
@@ -24,10 +22,9 @@ const bookClubSchema = new mongoose.Schema(
         type: String,
         enum: ["library", "cafe", "home", "park", "other"],
       },
-      ethLibraryId: String, // From ETH Library API
+      ethLibraryId: String,
     },
 
-    // MEETING DETAILS:
     meetingTime: Date,
     maxMembers: { type: Number, default: 20 },
     currentBooks: [
