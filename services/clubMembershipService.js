@@ -20,7 +20,7 @@ class ClubMembershipService {
   async removeMemberFromClub(userId, clubId) {
     const club = await clubService.getClubById(clubId);
     club.members = club.members.filter(
-      (member) => member.userId.toString() !== userId
+      (member) => member._id.toString() !== userId
     );
     await club.save();
     return club;
@@ -28,14 +28,14 @@ class ClubMembershipService {
 
   async getClubMembers(clubId, userId) {
     const club = await clubService.getClubById(clubId);
-    if (!club.members.some((member) => member.userId.toString() === userId)) {
+    if (!club.members.some((member) => member._id.toString() === userId)) {
       throw new Error("User is not a member of this club");
     }
     return club.members;
   }
 
   async validateClubJoin(club, userId) {
-    if (club.members.some((member) => member.userId.toString() === userId)) {
+    if (club.members.some((member) => member._id.toString() === userId)) {
       throw new Error("Already a member of this club");
     }
 
