@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const validateObjectId = (id, fieldName = "ID") => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new Error(`Invalid ${fieldName}`);
