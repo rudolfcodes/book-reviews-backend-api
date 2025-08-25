@@ -1,6 +1,7 @@
 const notificationService = require("../services/notificationService");
 const { sendSuccess, sendError } = require("../utils/responseHelper");
 const clubService = require("../services/clubService");
+const clubMembershipService = require("../services/clubMembershipService");
 
 exports.getAllBookClubs = async (req, res, next) => {
   try {
@@ -43,10 +44,7 @@ exports.getBookClubById = async (req, res) => {
 exports.createBookClub = async (req, res) => {
   try {
     const userId = req.user._id; // Assuming user is authenticated
-    const newClub = await clubService.createClub({
-      ...req.body,
-      creator: userId,
-    });
+    const newClub = await clubService.createClub(req.body, userId);
 
     // Notify creator about successful club creation
     await notificationService.notifyClubCreated(
@@ -66,7 +64,7 @@ exports.joinBookClub = async (req, res) => {
     const clubId = req.params.clubId;
     const userId = req.user._id;
 
-    const club = await clubService.joinClub(userId, clubId);
+    const club = await clubMembershipService.joinClub(userId, clubId);
 
     await notificationService.notifyMemberJoined(
       club.creator,
