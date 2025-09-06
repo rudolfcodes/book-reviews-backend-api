@@ -167,7 +167,7 @@ exports.deleteBookClub = async (req, res) => {
     const club = await clubService.deleteClub(clubId, userId);
 
     // notify all members about club deletion
-    await notificationService.notifyClubDeleted(
+    const notifications = await notificationService.notifyClubDeleted(
       club.members,
       userId,
       club.name
