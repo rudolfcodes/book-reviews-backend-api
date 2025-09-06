@@ -147,7 +147,6 @@ class ClubService {
 
   async isUserAdmin(userId, clubId) {
     const club = await this.getClubById(clubId);
-    console.log({ userId });
     return club.members.some(
       (member) =>
         member.userId.toString() === userId.toString() &&

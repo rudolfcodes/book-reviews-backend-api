@@ -6,7 +6,6 @@ class NotificationService {
   }
 
   async createBulkNotifications(notifications) {
-    console.log({ notifications });
     if (notifications.length > 0) {
       return await Notification.insertMany(notifications);
     }
