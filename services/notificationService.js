@@ -10,6 +10,7 @@ class NotificationService {
     if (notifications.length > 0) {
       return await Notification.insertMany(notifications);
     }
+    return [];
   }
 
   async notifyClubCreated(userId, clubId, clubName) {
