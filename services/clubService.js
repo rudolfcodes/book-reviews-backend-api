@@ -129,7 +129,11 @@ class ClubService {
     validateObjectId(clubId, "Club ID");
     const club = await this.getClubById(clubId);
 
-    if (!club.members.some((member) => member.userId.toString() === userId)) {
+    if (
+      !club.members.some(
+        (member) => member.userId.toString() === userId.toString()
+      )
+    ) {
       throw new Error("User is not a member of this club");
     }
 
@@ -138,6 +142,7 @@ class ClubService {
     );
 
     await club.save();
+    return club;
   }
 
   async isUserAdmin(userId, clubId) {
