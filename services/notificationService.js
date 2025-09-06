@@ -6,6 +6,7 @@ class NotificationService {
   }
 
   async createBulkNotifications(notifications) {
+    console.log({ notifications });
     if (notifications.length > 0) {
       return await Notification.insertMany(notifications);
     }
@@ -41,7 +42,8 @@ class NotificationService {
         message: `${adminUsername} has updated the book club "${clubName}".`,
         relatedBookClub: clubId,
       }));
-    return this.createBulkNotifications(notifications);
+    this.createBulkNotifications(notifications);
+    return notifications;
   }
 
   async notifyClubDeleted(members, adminId, clubName) {

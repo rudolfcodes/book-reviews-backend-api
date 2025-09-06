@@ -60,8 +60,8 @@ class ClubService {
     return newClub;
   }
 
-  async updateClub(clubId, data) {
-    const isAdmin = await this.isUserAdmin(data.userId, clubId);
+  async updateClub(clubId, userId, data) {
+    const isAdmin = await this.isUserAdmin(userId, clubId);
 
     if (!isAdmin) {
       throw new Error("Only admins can update club details");
@@ -86,10 +86,10 @@ class ClubService {
     }
 
     await BookClub.updateOne({ _id: clubId }, { $set: updateData });
-    await this.updateClubMembers(
-      updateData.members.map((member) => member.userId.toString()),
-      clubId
-    );
+    // await this.updateClubMembers(
+    //   updateData.members.map((member) => member.userId.toString()),
+    //   clubId
+    // );
 
     return await this.getClubById(clubId);
   }
@@ -147,8 +147,11 @@ class ClubService {
 
   async isUserAdmin(userId, clubId) {
     const club = await this.getClubById(clubId);
+    console.log({ userId });
     return club.members.some(
-      (member) => member.userId.toString() === userId && member.role === "admin"
+      (member) =>
+        member.userId.toString() === userId.toString() &&
+        member.role === "admin"
     );
   }
 }
