@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     country: { type: String },
   },
   language: { type: String, enum: ["en", "de", "fr"], default: "en" },
+  isVerified: { type: Boolean, default: false },
 });
 
 const User = mongoose.model("User", userSchema);
