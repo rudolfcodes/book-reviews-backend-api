@@ -34,15 +34,11 @@ exports.resetPassword = async (req, res) => {
   }
 
   try {
-    // find user by email
     const user = await User.findOne({ email });
-    // if no user, return 404 with message
     if (!user) {
       return res.status(404).json({ message: "No user was found..." });
     }
-    // use bcrypt hashSync to encrypt password
     user.password = bcrypt.hashSync(password, 10);
-    // save user to db
     await user.save();
 
     const mailOptions = {
@@ -63,17 +59,12 @@ exports.resetPassword = async (req, res) => {
       res.json({ message: "Password changed successfully" });
     });
   } catch (error) {
-    // console error message
     console.error("An error occurred changing the password: ", error);
-    // send 500 status with json and message stating that there has been a server error
     res.status(500).json({ message: "A server error occurred" });
   }
 };
 
-// User registration endpoint
 exports.registerUser = async (req, res) => {
-  // try catch block
-  // get username, password & email from request body
   const { username, password, confirmPassword, email } = req.body;
 
   if (password !== confirmPassword) {
