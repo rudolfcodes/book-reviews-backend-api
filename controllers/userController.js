@@ -1,7 +1,9 @@
 const User = require("../models/User");
+const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
 const nodemailer = require("nodemailer");
+const { generateOtp } = require("../utils/Otp");
 
 const transporter = nodemailer.createTransport({
   host: "mail.digitalnomadrudolf.com",
@@ -105,18 +107,14 @@ exports.registerUser = async (req, res) => {
 // User login endpoint
 exports.loginUser = async (req, res) => {
   try {
-    // fetch email and password from request body
     const { email, password, rememberMe } = req.body;
-    // find user by email using User model and findOne
     const user = await User.findOne({ email });
-    // if no user, return status 400 and error: Invalid username or password
     if (!user) {
       return res.status(400).json({
         error:
           "No user exists with this email address. Please create an account first",
       });
     }
-    // use bcrypt to check if there is a password match using the compare method
     const isMatch = await bcrypt.compare(password, user.password);
     // if there is no match, return 400 status and an error msg using json method Invalid username or password
     if (!isMatch) {
@@ -124,18 +122,34 @@ exports.loginUser = async (req, res) => {
         .status(400)
         .json({ error: "Invalid password. Please provide a correct password" });
     }
-    // Set token expiration based on rememberMe
-    const expiresIn = rememberMe ? "7d" : "1d";
-    // generate token from user
-    const token = generateToken(user, expiresIn);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 3600000,
+    const otp = generateOtp();
+    // store otp in database with userId, code, expiresAt (10 mins from now), attempts (0), reused (false)
+    otpEntry = new OTP({
+      userId: user._id,
+      code: otp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      attempts: 0,
+      reused: false,
     });
-    // send the response with the user & token
-    res.json({ user, token });
+
+    await otpEntry.save();
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Your OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+      html: `<p>Your OTP code is <b>${otp}</b>. It will expire in 10 minutes.</p>`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending mail:", error);
+      }
+    });
+
+    res.json({ message: "OTP has been sent to your email", userId: user._id });
   } catch (error) {
     console.log("Error logging in user:", error);
     res.status(500).json({ error: "Failed to login user" });
