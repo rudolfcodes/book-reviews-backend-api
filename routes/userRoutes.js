@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../controllers/userController");
 const auth = require("../middlewares/auth");
+const userController = require("../controllers/userController");
 const { body, validationResult } = require("express-validator");
 
 router.post(
@@ -39,10 +39,8 @@ router.post(
   },
   userController.loginUser
 );
-router.get("/:userId", userController.getUserProfile);
-router.post("/:userId/wishlist/add", userController.addToWishlist);
-router.get("/:userId/wishlist", userController.getWishlist);
-router.post("/:userId/wishlist/remove", userController.removeFromWishlist);
+
+router.get("/profile", auth, userController.getCurrentUserProfile);
 router.post("/reset-password", userController.resetPassword);
 
 module.exports = router;

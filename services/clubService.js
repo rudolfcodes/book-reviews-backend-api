@@ -1,0 +1,159 @@
+const BookClub = require("../models/BookClub");
+const { validateObjectId } = require("../utils/validation");
+const User = require("../models/User");
+
+class ClubService {
+  async getAllClubs(filters = {}, pagination) {
+    const { page = 1, limit = 10 } = pagination || {};
+    const { canton, city, language, category } = filters;
+    const filter = {};
+
+    if (canton) filter["location.canton"] = canton;
+    if (city) filter["location.city"] = city;
+    if (language) filter.language = language;
+    if (category) filter.category = category;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const totalDocs = await BookClub.countDocuments(filter);
+    const docs = await BookClub.find(filter)
+      .populate("creator", "username avatar")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    return {
+      docs,
+      totalDocs,
+      limit: parseInt(limit),
+      totalPages: Math.ceil(totalDocs / parseInt(limit)),
+      currentPage: parseInt(page),
+      hasNextPage: page < Math.ceil(totalDocs / parseInt(limit)),
+      hasPrevPage: page > 1,
+    };
+  }
+
+  async doesClubExist(clubName, city) {
+    const regex = new RegExp(`^${clubName}$`, "i"); // Case-insensitive match
+    return await BookClub.exists({ name: regex, "location.city": city });
+  }
+
+  async createClub(clubData, userId) {
+    const existingClub = await this.doesClubExist(
+      clubData.name,
+      clubData.location.city
+    );
+    if (existingClub) {
+      throw new Error("A club with this name already exists in this city.");
+    }
+
+    const newClub = new BookClub({
+      ...clubData,
+      creator: userId,
+      members: [{ userId, role: "admin" }], // Add creator as admin
+    });
+
+    await newClub.save();
+    await User.findByIdAndUpdate(userId, {
+      $push: { clubsJoined: newClub._id, clubsCreated: newClub._id },
+    });
+
+    return newClub;
+  }
+
+  async updateClub(clubId, userId, data) {
+    const isAdmin = await this.isUserAdmin(userId, clubId);
+
+    if (!isAdmin) {
+      throw new Error("Only admins can update club details");
+    }
+
+    const updateData = Object.fromEntries(
+      Object.entries(data).filter(([key]) =>
+        [
+          "name",
+          "description",
+          "location",
+          "category",
+          "language",
+          "isPrivate",
+          "meetingFrequency",
+        ].includes(key)
+      )
+    );
+
+    if (Object.keys(updateData).length === 0) {
+      throw new Error("No valid fields to update");
+    }
+
+    await BookClub.updateOne({ _id: clubId }, { $set: updateData });
+    // await this.updateClubMembers(
+    //   updateData.members.map((member) => member.userId.toString()),
+    //   clubId
+    // );
+
+    return await this.getClubById(clubId);
+  }
+
+  async deleteClub(clubId, userId) {
+    const club = await this.getClubById(clubId);
+    const isAdmin = await this.isUserAdmin(userId, clubId);
+    if (!isAdmin) {
+      throw new Error("Only admins can delete this club");
+    }
+
+    await BookClub.findByIdAndDelete(clubId);
+
+    const memberIds = club.members.map((member) => member.userId);
+    await User.updateMany(
+      { _id: { $in: memberIds } },
+      { $pull: { clubsJoined: clubId } }
+    );
+
+    await User.updateOne({ _id: userId }, { $pull: { clubsCreated: clubId } });
+
+    await BookClub.findByIdAndDelete(clubId);
+
+    return club;
+  }
+
+  async getClubById(clubId) {
+    validateObjectId(clubId, "Club ID");
+    const club = await BookClub.findById(clubId);
+    if (!club) {
+      throw new Error("Book club not found");
+    }
+    return club;
+  }
+
+  async leaveBookClub(userId, clubId) {
+    validateObjectId(clubId, "Club ID");
+    const club = await this.getClubById(clubId);
+
+    if (
+      !club.members.some(
+        (member) => member.userId.toString() === userId.toString()
+      )
+    ) {
+      throw new Error("User is not a member of this club");
+    }
+
+    club.members = club.members.filter(
+      (member) => member.userId.toString() !== userId
+    );
+
+    await club.save();
+    return club;
+  }
+
+  async isUserAdmin(userId, clubId) {
+    const club = await this.getClubById(clubId);
+    return club.members.some(
+      (member) =>
+        member.userId.toString() === userId.toString() &&
+        member.role === "admin"
+    );
+  }
+}
+
+module.exports = new ClubService();
+// This service can be used in controllers to manage book club memberships and roles.
