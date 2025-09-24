@@ -3,7 +3,7 @@ const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
 const nodemailer = require("nodemailer");
-const { generateOtp, validateOtp, verifyOtpCode } = require("../utils/Otp");
+const { generateOtp } = require("../utils/Otp");
 
 const transporter = nodemailer.createTransport({
   host: "mail.digitalnomadrudolf.com",
