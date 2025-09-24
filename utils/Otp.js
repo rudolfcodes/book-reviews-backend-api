@@ -22,13 +22,14 @@ const verifyOtpCode = async (userId, otp) => {
       return { success: false, message: "OTP has expired" };
     }
 
-    otpEntry.attempts += 1;
-    await otpEntry.save();
-
     if (otpEntry.code !== otp) {
+      otpEntry.attempts += 1;
+      await otpEntry.save();
       return { success: false, message: "Invalid OTP" };
     }
 
+    // Delete OTP entry after successful verification
+    await OTP.deleteOne({ userId });
     return { success: true, message: "OTP verified successfully" };
   } catch (error) {
     console.error("Error verifying OTP:", error);
@@ -36,4 +37,17 @@ const verifyOtpCode = async (userId, otp) => {
   }
 };
 
-module.exports = { generateOtp, verifyOtpCode };
+const generateAndStoreOtp = async (userId) => {
+  const code = generateOtp();
+  const optEntry = new OTP({
+    userId,
+    code,
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    attempts: 0,
+    reused: false,
+  });
+  await optEntry.save();
+  return code;
+};
+
+module.exports = { generateOtp, verifyOtpCode, generateAndStoreOtp };
