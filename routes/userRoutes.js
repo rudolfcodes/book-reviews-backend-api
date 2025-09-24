@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
 const userController = require("../controllers/userController");
+const otpController = require("../controllers/otpController");
 const { body, validationResult } = require("express-validator");
 
 router.post(
@@ -42,5 +43,9 @@ router.post(
 
 router.get("/profile", auth, userController.getCurrentUserProfile);
 router.post("/reset-password", userController.resetPassword);
+
+// add endpoint for verify-otp and resend-otp
+router.post("/verify-otp", otpController.verifyOtp);
+router.post("/resend-otp", otpController.resendOtp);
 
 module.exports = router;

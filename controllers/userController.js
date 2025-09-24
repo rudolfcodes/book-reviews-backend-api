@@ -3,7 +3,7 @@ const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
 const nodemailer = require("nodemailer");
-const { generateOtp, validateOtp, verifyOtpCode } = require("../utils/Otp");
+const { generateOtp } = require("../utils/Otp");
 
 const transporter = nodemailer.createTransport({
   host: "mail.digitalnomadrudolf.com",
@@ -144,28 +144,6 @@ exports.loginUser = async (req, res) => {
   } catch (error) {
     console.log("Error logging in user:", error);
     res.status(500).json({ error: "Failed to login user" });
-  }
-};
-
-exports.verifyOtp = async (req, res) => {
-  try {
-    const { userId, otp, rememberMe } = req.body;
-    const otpResult = verifyOtpCode(userId, otp);
-
-    if (!otpResult.success) {
-      return res.status(400).json({ error: otpResult.message });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const token = generateToken(user, req.body.rememberMe ? "7d" : "1h");
-    res.json({ token, user });
-  } catch (error) {
-    console.error("Error verifying OTP:", error);
-    res.status(500).json({ error: "Failed to verify OTP" });
   }
 };
 
