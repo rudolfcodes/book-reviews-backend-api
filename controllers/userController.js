@@ -147,28 +147,6 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-exports.verifyOtp = async (req, res) => {
-  try {
-    const { userId, otp, rememberMe } = req.body;
-    const otpResult = verifyOtpCode(userId, otp);
-
-    if (!otpResult.success) {
-      return res.status(400).json({ error: otpResult.message });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    const token = generateToken(user, req.body.rememberMe ? "7d" : "1h");
-    res.json({ token, user });
-  } catch (error) {
-    console.error("Error verifying OTP:", error);
-    res.status(500).json({ error: "Failed to verify OTP" });
-  }
-};
-
 // Only for usage for admin/system purposes
 exports.getUserProfile = async (req, res) => {
   try {
