@@ -6,9 +6,8 @@ const nodemailer = require("nodemailer");
 const { generateOtp } = require("../utils/Otp");
 
 const transporter = nodemailer.createTransport({
-  host: "mail.digitalnomadrudolf.com",
-  port: 587,
-  secure: false,
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
