@@ -1,7 +1,7 @@
 const OTP = require("../models/OTP");
 const User = require("../models/User");
 const { generateToken } = require("../utils/jwt");
-const { setAuthCookie } = require("../utils/cookies");
+const { setAuthCookie } = require("../utils/setAuthCookie");
 
 const verifyOtp = async (req, res) => {
   try {
