@@ -94,7 +94,6 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// User login endpoint
 exports.loginUser = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
