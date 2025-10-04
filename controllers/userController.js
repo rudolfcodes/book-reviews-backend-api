@@ -2,28 +2,8 @@ const User = require("../models/User");
 const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
-const nodemailer = require("nodemailer");
 const { generateOtp } = require("../utils/Otp");
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP Configuration Error:", error);
-  } else {
-    console.log("SMTP Configuration Success:", success);
-  }
-});
+const transporter = require("../utils/emailTransporter");
 
 exports.resetPassword = async (req, res) => {
   const { email, password, confirmPassword } = req.body;
