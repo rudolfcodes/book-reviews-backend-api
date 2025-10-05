@@ -35,7 +35,10 @@ exports.resetPassword = async (req, res) => {
           .status(500)
           .json({ message: "Failed to send confirmation email" });
       }
-      res.json({ message: "Password changed successfully" });
+      res.json({
+        message:
+          "Password changed successfully. A confirmation email has been sent.",
+      });
     });
   } catch (error) {
     console.error("An error occurred changing the password: ", error);
@@ -126,6 +129,42 @@ exports.loginUser = async (req, res) => {
   } catch (error) {
     console.log("Error logging in user:", error);
     res.status(500).json({ error: "Failed to login user" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "No user found with the provided email" });
+    }
+
+    const resetLink = `${
+      process.env.FRONTEND_URL
+    }/reset-password?email=${encodeURIComponent(email)}`;
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `Click the following link to reset your password: ${resetLink}`,
+      html: `<p>Click the following link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending mail:", error);
+        return res.status(500).json({ error: "Failed to send reset email" });
+      }
+      res
+        .status(200)
+        .json({ message: "Password reset email sent successfully" });
+    });
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    res.status(500).json({ error: "Failed to process forgot password" });
   }
 };
 
