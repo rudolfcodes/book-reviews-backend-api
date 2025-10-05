@@ -142,9 +142,9 @@ exports.forgotPassword = async (req, res) => {
         .json({ error: "No user found with the provided email" });
     }
 
-    const resetLink = `${
-      process.env.FRONTEND_URL
-    }/reset-password?token=${generateToken(user, "1h")}`;
+    const resetToken = generateToken(user, "1h");
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
@@ -152,6 +152,10 @@ exports.forgotPassword = async (req, res) => {
       text: `Click the following link to reset your password: ${resetLink}`,
       html: `<p>Click the following link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
     };
+
+    // save the reset token to the user's record (you might want to create a separate field for this)
+    user.resetToken = resetToken;
+    await user.save();
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
