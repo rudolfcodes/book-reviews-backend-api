@@ -144,7 +144,7 @@ exports.forgotPassword = async (req, res) => {
 
     const resetLink = `${
       process.env.FRONTEND_URL
-    }/reset-password?email=${encodeURIComponent(email)}`;
+    }/reset-password?token=${generateToken(user, "1h")}`;
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
