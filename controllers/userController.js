@@ -6,14 +6,20 @@ const { generateOtp } = require("../utils/Otp");
 const transporter = require("../utils/emailTransporter");
 
 exports.resetPassword = async (req, res) => {
-  const { password, token } = req.body;
+  const { oldPassword, newPassword, token } = req.body;
 
   try {
     const user = await User.findOne({ resetToken: token });
     if (!user) {
       return res.status(404).json({ message: "No user was found..." });
     }
-    user.password = bcrypt.hashSync(password, 10);
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    user.password = bcrypt.hashSync(newPassword, 10);
     user.resetToken = undefined;
     await user.save();
 
@@ -28,12 +34,10 @@ exports.resetPassword = async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending mail:", error);
-        return res
-          .status(500)
-          .json({
-            message: "Failed to send confirmation email",
-            success: false,
-          });
+        return res.status(500).json({
+          message: "Failed to send confirmation email",
+          success: false,
+        });
       }
       res.json({
         success: true,
