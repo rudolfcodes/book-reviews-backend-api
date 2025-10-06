@@ -42,9 +42,10 @@ router.post(
 );
 
 router.get("/profile", auth, userController.getCurrentUserProfile);
+router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);
+router.post("/verify-reset-token", userController.verifyForgotPasswordToken);
 
-// add endpoint for verify-otp and resend-otp
 router.post("/verify-otp", otpController.verifyOtp);
 router.post("/resend-otp", otpController.resendOtp);
 

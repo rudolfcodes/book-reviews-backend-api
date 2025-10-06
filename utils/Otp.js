@@ -38,15 +38,18 @@ const verifyOtpCode = async (userId, otp) => {
 };
 
 const generateAndStoreOtp = async (userId) => {
+  await OTP.deleteMany({ userId });
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
   const code = generateOtp();
-  const optEntry = new OTP({
+  const otpEntry = new OTP({
     userId,
     code,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    expiresAt,
     attempts: 0,
     reused: false,
   });
-  await optEntry.save();
+  await otpEntry.save();
   return code;
 };
 

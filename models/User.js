@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: false, unique: true },
   password: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  resetToken: { type: String, required: false },
 
   // Club relationships
   clubsJoined: [{ type: mongoose.Schema.Types.ObjectId, ref: "Club" }],

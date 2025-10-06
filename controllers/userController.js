@@ -2,43 +2,25 @@ const User = require("../models/User");
 const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
-const nodemailer = require("nodemailer");
 const { generateOtp } = require("../utils/Otp");
-
-const transporter = nodemailer.createTransport({
-  host: "mail.digitalnomadrudolf.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP Configuration Error:", error);
-  } else {
-    console.log("SMTP Configuration Success:", success);
-  }
-});
+const transporter = require("../utils/emailTransporter");
 
 exports.resetPassword = async (req, res) => {
-  const { email, password, confirmPassword } = req.body;
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ message: "Passwords do not match" });
-  }
+  const { oldPassword, newPassword, token } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ resetToken: token });
     if (!user) {
       return res.status(404).json({ message: "No user was found..." });
     }
-    user.password = bcrypt.hashSync(password, 10);
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    user.password = bcrypt.hashSync(newPassword, 10);
+    user.resetToken = undefined;
     await user.save();
 
     const mailOptions = {
@@ -52,11 +34,16 @@ exports.resetPassword = async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error sending mail:", error);
-        return res
-          .status(500)
-          .json({ message: "Failed to send confirmation email" });
+        return res.status(500).json({
+          message: "Failed to send confirmation email",
+          success: false,
+        });
       }
-      res.json({ message: "Password changed successfully" });
+      res.json({
+        success: true,
+        message:
+          "Password changed successfully. A confirmation email has been sent.",
+      });
     });
   } catch (error) {
     console.error("An error occurred changing the password: ", error);
@@ -95,10 +82,9 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// User login endpoint
 exports.loginUser = async (req, res) => {
   try {
-    const { email, password, rememberMe } = req.body;
+    const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
@@ -140,10 +126,63 @@ exports.loginUser = async (req, res) => {
       }
     });
 
-    res.json({ message: "OTP has been sent to your email", userId: user._id });
+    res.json({
+      message: "OTP has been sent to your email",
+      userId: user._id,
+      otpRequired: true,
+    });
   } catch (error) {
     console.log("Error logging in user:", error);
     res.status(500).json({ error: "Failed to login user" });
+  }
+};
+
+exports.verifyForgotPasswordToken = async (req, res) => {
+  const { token } = req.body;
+  const user = await User.findOne({ resetToken: token });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid or expired token" });
+  }
+  res.json({ valid: !!user });
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "No user found with the provided email" });
+    }
+
+    const resetToken = generateToken(user, "1h");
+
+    const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `Click the following link to reset your password: ${resetLink}`,
+      html: `<p>Click the following link to reset your password: <a href="${resetLink}">${resetLink}</a></p>`,
+    };
+
+    // save the reset token to the user's record (you might want to create a separate field for this)
+    user.resetToken = resetToken;
+    await user.save();
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending mail:", error);
+        return res.status(500).json({ error: "Failed to send reset email" });
+      }
+      res
+        .status(200)
+        .json({ message: "Password reset email sent successfully" });
+    });
+  } catch (error) {
+    console.error("Error in forgotPassword:", error);
+    res.status(500).json({ error: "Failed to process forgot password" });
   }
 };
 
