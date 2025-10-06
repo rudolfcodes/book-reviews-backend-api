@@ -132,6 +132,15 @@ exports.loginUser = async (req, res) => {
   }
 };
 
+exports.verifyForgotPasswordToken = async (req, res) => {
+  const { token } = req.body;
+  const user = await User.findOne({ resetToken: token });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid or expired token" });
+  }
+  res.json({ valid: !!user });
+};
+
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
