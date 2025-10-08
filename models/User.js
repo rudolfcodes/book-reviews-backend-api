@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema({
   },
   language: { type: String, enum: ["en", "de", "fr"], default: "en" },
   isVerified: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const User = mongoose.model("User", userSchema);
