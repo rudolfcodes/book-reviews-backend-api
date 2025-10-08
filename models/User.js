@@ -6,11 +6,9 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   resetToken: { type: String, required: false },
 
-  // Club relationships
   clubsJoined: [{ type: mongoose.Schema.Types.ObjectId, ref: "Club" }],
   clubsCreated: [{ type: mongoose.Schema.Types.ObjectId, ref: "Club" }],
 
-  // Event relationships
   eventsCreated: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
   eventsAttending: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
 
