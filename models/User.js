@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   eventsAttending: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
 
   // Profile details
-  avatar: { type: String, default: "default-avatar.png" },
+  avatar: { type: String },
   bio: { type: String, maxlength: 500 },
   location: {
     city: { type: String },
