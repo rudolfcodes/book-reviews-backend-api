@@ -203,11 +203,22 @@ exports.getUserProfile = async (req, res) => {
 
 exports.getCurrentUserProfile = async (req, res) => {
   try {
-    const user = req.user;
+    const userId = req.user._id;
+    const user = await User.findById(userId).select(
+      "-password -resetToken -__v"
+    );
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
     res.json({
       id: user._id,
       username: user.username,
       email: user.email,
+      avatar: user.avatar,
+      isVerified: user.isVerified,
+      language: user.language,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     });
   } catch (error) {
     console.error("Error fetching current user profile:", error);
