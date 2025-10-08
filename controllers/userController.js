@@ -186,21 +186,31 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// Only for usage for admin/system purposes
-exports.getUserProfile = async (req, res) => {
+exports.getUserPublicProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId);
-
+    const { userId } = req.params;
+    const user = await User.findById(userId).select(
+      "username email avatar isVerified language"
+    );
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    res.json(user);
+    res.json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      isVerified: user.isVerified,
+      language: user.language,
+      memberSince: user.createdAt,
+    });
   } catch (error) {
-    console.error("No user found:", error);
+    console.error("Error fetching user profile:", error);
     res.status(500).json({ error: "Failed to fetch user profile" });
   }
 };
 
+// For authenticated user's own complete profile
 exports.getCurrentUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -217,8 +227,11 @@ exports.getCurrentUserProfile = async (req, res) => {
       avatar: user.avatar,
       isVerified: user.isVerified,
       language: user.language,
+      bio: user.bio,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+      clubsJoined: user.clubsJoined,
+      clubsCreated: user.clubsCreated,
     });
   } catch (error) {
     console.error("Error fetching current user profile:", error);
