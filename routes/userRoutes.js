@@ -41,7 +41,9 @@ router.post(
   userController.loginUser
 );
 
-router.get("/profile", auth, userController.getCurrentUserProfile);
+router.get("/profile/:userId", auth, userController.getUserPublicProfile);
+router.get("/username/:username", auth, userController.getUserPublicProfile);
+router.get("/me", auth, userController.getCurrentUserProfile);
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);
 router.post("/verify-reset-token", userController.verifyForgotPasswordToken);

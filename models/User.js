@@ -6,16 +6,14 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   resetToken: { type: String, required: false },
 
-  // Club relationships
   clubsJoined: [{ type: mongoose.Schema.Types.ObjectId, ref: "Club" }],
   clubsCreated: [{ type: mongoose.Schema.Types.ObjectId, ref: "Club" }],
 
-  // Event relationships
   eventsCreated: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
   eventsAttending: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
 
   // Profile details
-  avatar: { type: String, default: "default-avatar.png" },
+  avatar: { type: String },
   bio: { type: String, maxlength: 500 },
   location: {
     city: { type: String },
@@ -23,6 +21,8 @@ const userSchema = new mongoose.Schema({
   },
   language: { type: String, enum: ["en", "de", "fr"], default: "en" },
   isVerified: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const User = mongoose.model("User", userSchema);
