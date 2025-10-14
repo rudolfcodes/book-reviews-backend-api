@@ -3,14 +3,16 @@ const SWISS_CITIES = require("../data/swiss_cities.json");
 
 exports.getCitySuggestions = async (req, res, next) => {
   try {
-    const { q } = req.query;
-    if (!q || q.trim() === "") {
-      return res.status(400).json({ error: "Query parameter 'q' is required" });
+    const { search } = req.query;
+    if (!search || search.trim() === "") {
+      return res
+        .status(400)
+        .json({ error: "Query parameter 'search' is required" });
     }
 
     const postalCodePattern = /^\d{4}$/;
-    if (postalCodePattern.test(q)) {
-      const city = SWISS_CITIES.find((city) => city.postalCode === q);
+    if (postalCodePattern.test(search)) {
+      const city = SWISS_CITIES.find((city) => city.postalCode === search);
       if (city) {
         return sendSuccess(
           res,
@@ -27,8 +29,14 @@ exports.getCitySuggestions = async (req, res, next) => {
         );
       }
     }
-    const query = q.toLowerCase();
-    const suggestions = SWISS_CITIES.filter((city) =>
+    const query = search.toLowerCase();
+    const uniqueCities = new Map();
+    SWISS_CITIES.forEach((city) => {
+      if (!uniqueCities.has(city.name.toLowerCase())) {
+        uniqueCities.set(city.name.toLowerCase(), city);
+      }
+    });
+    const suggestions = Array.from(uniqueCities.values()).filter((city) =>
       city.name.toLowerCase().startsWith(query)
     );
     sendSuccess(res, suggestions, "City suggestions fetched successfully", 200);
