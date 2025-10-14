@@ -1,5 +1,5 @@
 const { sendError, sendSuccess } = require("../utils/responseHelper");
-const SWISS_CITIES = require("../data/swissCities.json");
+const SWISS_CITIES = require("../data/swiss_cities.json");
 
 exports.getCitySuggestions = async (req, res, next) => {
   try {
