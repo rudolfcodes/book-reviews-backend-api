@@ -1,6 +1,15 @@
 const { sendError, sendSuccess } = require("../utils/responseHelper");
 const SWISS_CITIES = require("../data/swiss_cities.json");
 
+function normalizeSearchTerm(str) {
+  return str
+    .toLowerCase()
+    .replace(/ä/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/ü/g, "u")
+    .replace(/ß/g, "ss");
+}
+
 exports.getCitySuggestions = async (req, res, next) => {
   try {
     const { search } = req.query;
@@ -32,12 +41,12 @@ exports.getCitySuggestions = async (req, res, next) => {
     const query = search.toLowerCase();
     const uniqueCities = new Map();
     SWISS_CITIES.forEach((city) => {
-      if (!uniqueCities.has(city.name.toLowerCase())) {
-        uniqueCities.set(city.name.toLowerCase(), city);
+      if (!uniqueCities.has(normalizeSearchTerm(city.name))) {
+        uniqueCities.set(normalizeSearchTerm(city.name), city);
       }
     });
     const suggestions = Array.from(uniqueCities.values()).filter((city) =>
-      city.name.toLowerCase().startsWith(query)
+      normalizeSearchTerm(city.name).includes(normalizeSearchTerm(query))
     );
     sendSuccess(res, suggestions, "City suggestions fetched successfully", 200);
   } catch (error) {
