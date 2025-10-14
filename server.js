@@ -19,6 +19,7 @@ mongoose.connect(MONGO_URI);
 
 const userRoutes = require("./routes/userRoutes");
 const bookClubRoutes = require("./routes/bookClubRoutes");
+const cityRoutes = require("./routes/cityRoutes");
 
 // Swagger Documentation
 app.use(
@@ -40,6 +41,7 @@ app.use(
 app.use(errorHandler);
 app.use("/api/users", userRoutes);
 app.use("/api/bookclubs", bookClubRoutes);
+app.use("/api/cities", cityRoutes);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
