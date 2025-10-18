@@ -38,7 +38,7 @@ class ClubService {
   }
 
   async getPopularClubs(limit) {
-    return await BookClub.find().sort({ memberCount: -1 }).limit(limit);
+    return await BookClub.find().sort({ members: -1 }).limit(limit);
   }
 
   async createClub(clubData, userId) {
