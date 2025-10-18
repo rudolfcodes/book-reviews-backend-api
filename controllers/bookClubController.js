@@ -12,7 +12,7 @@ exports.getBookClubs = async (req, res, next) => {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
     };
-    const bookClubs = await clubService.getAllClubs(filters, options);
+    const bookClubs = await clubService.getClubs(filters, options);
 
     if (!bookClubs || bookClubs.length === 0) {
       return res.status(404).json({ message: "No book clubs found" });
