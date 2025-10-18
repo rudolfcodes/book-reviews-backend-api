@@ -13,6 +13,7 @@ router.post("/:clubId/join", auth, bookClubController.joinBookClub);
 router.post("/:clubId/leave", auth, bookClubController.leaveBookClub);
 router.put("/:clubId/rsvp", auth, bookClubController.rsvpToMeeting);
 router.get("/:clubId/members", auth, bookClubController.getClubMembers);
+router.get("/popular", bookClubController.getPopularBookClubs);
 
 // ADMIN ONLY ROUTES:
 router.put("/:clubId", auth, bookClubController.updateBookClub); // Need to add admin check

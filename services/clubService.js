@@ -37,6 +37,10 @@ class ClubService {
     return await BookClub.exists({ name: regex, "location.city": city });
   }
 
+  async getPopularClubs(limit) {
+    return await BookClub.find().sort({ memberCount: -1 }).limit(limit);
+  }
+
   async createClub(clubData, userId) {
     const existingClub = await this.doesClubExist(
       clubData.name,

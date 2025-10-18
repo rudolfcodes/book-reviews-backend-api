@@ -34,6 +34,20 @@ exports.getBookClubById = async (req, res) => {
   }
 };
 
+exports.getPopularBookClubs = async (req, res) => {
+  try {
+    const popularClubs = await clubService.getPopularClubs(3);
+    sendSuccess(
+      res,
+      popularClubs,
+      "Popular book clubs fetched successfully",
+      200
+    );
+  } catch (error) {
+    sendError(res, error, 500, "Failed to fetch popular book clubs");
+  }
+};
+
 exports.createBookClub = async (req, res) => {
   try {
     const userId = req.user._id; // Assuming user is authenticated
