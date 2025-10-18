@@ -3,15 +3,15 @@ const { validateObjectId } = require("../utils/validation");
 const User = require("../models/User");
 
 class ClubService {
-  async getAllClubs(filters = {}, pagination) {
+  async getClubs(filters = {}, pagination) {
     const { page = 1, limit = 10 } = pagination || {};
-    const { canton, city, language, category } = filters;
+    const { canton, city, language, genre } = filters;
     const filter = {};
 
     if (canton) filter["location.canton"] = canton;
     if (city) filter["location.city"] = city;
     if (language) filter.language = language;
-    if (category) filter.category = category;
+    if (genre) filter.genre = genre;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const totalDocs = await BookClub.countDocuments(filter);
@@ -73,7 +73,7 @@ class ClubService {
           "name",
           "description",
           "location",
-          "category",
+          "genre",
           "language",
           "isPrivate",
           "meetingFrequency",

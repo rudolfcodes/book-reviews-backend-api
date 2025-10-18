@@ -73,7 +73,7 @@ const bookClubSchema = new mongoose.Schema(
       },
     ],
 
-    category: {
+    genre: {
       type: String,
       enum: ["fiction", "non-fiction", "mystery", "fantasy", "biography"],
       default: "fiction",

@@ -3,18 +3,11 @@ const { sendSuccess, sendError } = require("../utils/responseHelper");
 const clubService = require("../services/clubService");
 const clubMembershipService = require("../services/clubMembershipService");
 
-exports.getAllBookClubs = async (req, res, next) => {
+exports.getBookClubs = async (req, res, next) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      canton,
-      city,
-      language,
-      category,
-    } = req.query;
+    const { page = 1, limit = 10, canton, city, language, genre } = req.query;
 
-    const filters = { canton, city, language, category };
+    const filters = { canton, city, language, genre };
     const options = {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
