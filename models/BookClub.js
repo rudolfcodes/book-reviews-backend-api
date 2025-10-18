@@ -9,6 +9,7 @@ const bookClubSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    imageUrl: { type: String },
 
     location: {
       address: String,
