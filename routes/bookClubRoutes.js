@@ -4,7 +4,7 @@ const bookClubController = require("../controllers/bookClubController");
 const auth = require("../middlewares/auth");
 
 // PUBLIC ROUTES:
-router.get("/", bookClubController.getAllBookClubs); // Browse clubs
+router.get("/", bookClubController.getBookClubs); // Browse clubs
 router.get("/:clubId", bookClubController.getBookClubById); // Club details
 
 // AUTHENTICATED ROUTES:
