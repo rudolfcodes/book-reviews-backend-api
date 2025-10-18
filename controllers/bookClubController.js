@@ -36,7 +36,8 @@ exports.getBookClubById = async (req, res) => {
 
 exports.getPopularBookClubs = async (req, res) => {
   try {
-    const popularClubs = await clubService.getPopularClubs(3);
+    const { limit } = req.query;
+    const popularClubs = await clubService.getPopularClubs(limit || 3);
     sendSuccess(
       res,
       popularClubs,
