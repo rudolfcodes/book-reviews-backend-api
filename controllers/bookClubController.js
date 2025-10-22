@@ -5,12 +5,21 @@ const clubMembershipService = require("../services/clubMembershipService");
 
 exports.getBookClubs = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, canton, city, language, genre } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      canton,
+      city,
+      language,
+      genre,
+      sortBy = "newest",
+    } = req.query;
 
     const filters = { canton, city, language, genre };
     const options = {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
+      sortBy,
     };
     const bookClubs = await clubService.getClubs(filters, options);
 
@@ -31,21 +40,6 @@ exports.getBookClubById = async (req, res) => {
     sendSuccess(res, bookClub, "Book club fetched successfully", 200);
   } catch (error) {
     sendError(res, error, 500, "Failed to fetch book club");
-  }
-};
-
-exports.getPopularBookClubs = async (req, res) => {
-  try {
-    const { limit } = req.query;
-    const popularClubs = await clubService.getPopularClubs(limit || 3);
-    sendSuccess(
-      res,
-      popularClubs,
-      "Popular book clubs fetched successfully",
-      200
-    );
-  } catch (error) {
-    sendError(res, error, 500, "Failed to fetch popular book clubs");
   }
 };
 
