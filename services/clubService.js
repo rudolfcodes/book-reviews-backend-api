@@ -4,7 +4,7 @@ const User = require("../models/User");
 
 class ClubService {
   async getClubs(filters = {}, pagination) {
-    const { page = 1, limit = 10 } = pagination || {};
+    const { page = 1, limit = 10, sortBy = "newest" } = pagination || {};
     const { canton, city, language, genre } = filters;
     const filter = {};
 
@@ -13,11 +13,30 @@ class ClubService {
     if (language) filter.language = language;
     if (genre) filter.genre = genre;
 
+    let sortCriteria;
+    switch (sortBy) {
+      case "popular":
+        sortCriteria = { members: -1 };
+        break;
+      case "name":
+        sortCriteria = { name: 1 };
+        break;
+      case "newest":
+        sortCriteria = { createdAt: -1 };
+        break;
+      case "oldest":
+        sortCriteria = { createdAt: 1 };
+        break;
+      default:
+        sortCriteria = { createdAt: -1 };
+        break;
+    }
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const totalDocs = await BookClub.countDocuments(filter);
     const docs = await BookClub.find(filter)
       .populate("creator", "username avatar")
-      .sort({ createdAt: -1 })
+      .sort(sortCriteria)
       .skip(skip)
       .limit(parseInt(limit));
 
