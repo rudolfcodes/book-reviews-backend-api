@@ -12,24 +12,24 @@ const eventSchema = new mongoose.Schema(
     location: {
       address: String,
       city: String,
-      canton: String, // Swiss cantons
+      canton: String,
       coordinates: {
         lat: Number,
         lng: Number,
       },
       venueType: {
         type: String,
-        enum: ["library", "cafe", "home", "park", "other"],
+        enum: ["library", "cafe", "home", "park", "in-person", "online"],
       },
       ethLibraryId: String, // From ETH Library API
     },
     book: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Book",
-      title: String, // Optional book title for the event
-      author: String, // Optional book author for the event
-      thumbnail: String, // Optional book thumbnail for the event
-      googleBooksId: String, // Optional Google Books ID for the event
+      title: String,
+      author: String,
+      thumbnail: String,
+      googleBooksId: String,
     },
     attendees: [
       {
@@ -58,6 +58,7 @@ const eventSchema = new mongoose.Schema(
       enum: ["upcoming", "ongoing", "completed", "cancelled"],
       default: "upcoming",
     },
+    language: { type: String, enum: ["en", "de", "fr"], default: "en" },
   },
   {
     timestamps: true, // Automatically manage createdAt and updatedAt
@@ -65,7 +66,7 @@ const eventSchema = new mongoose.Schema(
 );
 
 // Indexes needed for Event:
-eventSchema.index({ clubId: 1, date: 1 }); // For upcoming events in a club~
+eventSchema.index({ clubId: 1, date: 1 }); // For upcoming events in a club
 eventSchema.index({ date: 1, status: 1 }); // For user's created events
 
 const Event = mongoose.model("Event", eventSchema);
