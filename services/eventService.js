@@ -66,8 +66,6 @@ class EventService {
       $push: {
         eventsCreated: newEvent._id,
         eventsAttending: newEvent._id,
-        clubsJoined: eventData.clubId,
-        clubsCreated: eventData.clubId,
       },
     });
 
