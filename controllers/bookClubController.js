@@ -3,7 +3,7 @@ const { sendSuccess, sendError } = require("../utils/responseHelper");
 const clubService = require("../services/clubService");
 const clubMembershipService = require("../services/clubMembershipService");
 
-exports.getAllBookClubs = async (req, res, next) => {
+exports.getBookClubs = async (req, res, next) => {
   try {
     const {
       page = 1,
@@ -11,15 +11,17 @@ exports.getAllBookClubs = async (req, res, next) => {
       canton,
       city,
       language,
-      category,
+      genre,
+      sortBy = "newest",
     } = req.query;
 
-    const filters = { canton, city, language, category };
+    const filters = { canton, city, language, genre };
     const options = {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
+      sortBy,
     };
-    const bookClubs = await clubService.getAllClubs(filters, options);
+    const bookClubs = await clubService.getClubs(filters, options);
 
     if (!bookClubs || bookClubs.length === 0) {
       return res.status(404).json({ message: "No book clubs found" });

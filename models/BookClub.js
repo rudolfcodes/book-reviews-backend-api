@@ -9,6 +9,7 @@ const bookClubSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    imageUrl: { type: String },
 
     location: {
       address: String,
@@ -72,7 +73,7 @@ const bookClubSchema = new mongoose.Schema(
       },
     ],
 
-    category: {
+    genre: {
       type: String,
       enum: ["fiction", "non-fiction", "mystery", "fantasy", "biography"],
       default: "fiction",
