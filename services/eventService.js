@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const User = require("../models/User");
 
 class EventService {
   async getEvents(filters, options) {
@@ -53,6 +54,24 @@ class EventService {
       hasNextPage: pageNum < totalPages,
       hasPrevPage: pageNum > 1,
     };
+  }
+
+  async createEvent(eventData) {
+    const newEvent = new Event({
+      ...eventData,
+    });
+
+    await newEvent.save();
+    await User.findByIdAndUpdate(eventData.userId, {
+      $push: {
+        eventsCreated: newEvent._id,
+        eventsAttending: newEvent._id,
+        clubsJoined: eventData.clubId,
+        clubsCreated: eventData.clubId,
+      },
+    });
+
+    return newEvent;
   }
 }
 
