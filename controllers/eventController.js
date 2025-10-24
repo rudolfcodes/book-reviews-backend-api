@@ -1,4 +1,5 @@
 const { sendError, sendSuccess } = require("../utils/responseHelper");
+const eventService = require("../services/eventService");
 
 exports.getEvents = async (req, res, next) => {
   try {
