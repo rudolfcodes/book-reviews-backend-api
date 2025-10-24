@@ -36,6 +36,15 @@ exports.createEvent = async (req, res, next) => {
   try {
     const userId = req.user._id;
     const clubId = req.params.clubId;
+
+    const isOwner = req.user.clubsCreated.includes(clubId);
+    if (!isOwner) {
+      return sendError(
+        res,
+        "You are not authorized to create events for this book club"
+      );
+    }
+
     const event = {
       ...req.body,
       userId: userId,
