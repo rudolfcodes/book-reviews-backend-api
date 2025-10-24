@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const bookClubController = require("../controllers/bookClubController");
+const eventController = require("../controllers/eventController");
 const auth = require("../middlewares/auth");
 
 // PUBLIC ROUTES:
 router.get("/", bookClubController.getBookClubs);
-router.get("/:clubId/events", bookClubController.getClubEvents);
+router.get("/:clubId/events", eventController.getEvents);
 
 // AUTHENTICATED ROUTES:
 router.post("/", auth, bookClubController.createBookClub);
