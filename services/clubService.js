@@ -34,6 +34,7 @@ class ClubService {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const totalDocs = await BookClub.countDocuments(filter);
+    const totalPages = Math.ceil(totalDocs / parseInt(limit));
     const docs = await BookClub.find(filter)
       .populate("creator", "username avatar")
       .sort(sortCriteria)
@@ -44,9 +45,9 @@ class ClubService {
       docs,
       totalDocs,
       limit: parseInt(limit),
-      totalPages: Math.ceil(totalDocs / parseInt(limit)),
+      totalPages: totalPages,
       currentPage: parseInt(page),
-      hasNextPage: page < Math.ceil(totalDocs / parseInt(limit)),
+      hasNextPage: page < totalPages,
       hasPrevPage: page > 1,
     };
   }
