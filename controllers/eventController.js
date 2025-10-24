@@ -50,6 +50,7 @@ exports.createEvent = async (req, res, next) => {
       userId: userId,
       clubId: clubId,
       attendees: [userId],
+      createdBy: userId,
     };
     const newEvent = await eventService.createEvent(event);
     sendSuccess(res, newEvent, "Event created successfully", 201);
