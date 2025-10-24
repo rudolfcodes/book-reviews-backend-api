@@ -30,3 +30,21 @@ exports.getEvents = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.createEvent = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const clubId = req.params.clubId;
+    const event = {
+      ...req.body,
+      userId: userId,
+      clubId: clubId,
+      attendees: [userId],
+    };
+    const newEvent = await eventService.createEvent(event);
+    sendSuccess(res, newEvent, "Event created successfully", 201);
+  } catch (error) {
+    sendError(res, error, 500, "Failed to create event");
+    next(error);
+  }
+};
