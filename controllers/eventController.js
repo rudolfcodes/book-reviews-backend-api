@@ -59,3 +59,22 @@ exports.createEvent = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.rsvpToEvent = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const eventId = req.params.eventId;
+    const { rsvpStatus } = req.body;
+
+    const updatedEvent = await eventService.rsvpToEvent(
+      userId,
+      eventId,
+      rsvpStatus
+    );
+
+    sendSuccess(res, updatedEvent, "RSVP updated successfully", 200);
+  } catch (error) {
+    sendError(res, error, 500, "Failed to RSVP to event");
+    next(error);
+  }
+};
