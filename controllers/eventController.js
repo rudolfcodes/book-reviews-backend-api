@@ -70,7 +70,7 @@ exports.rsvpToEvent = async (req, res, next) => {
     if (!isMember) {
       return sendError(
         res,
-        "You are not authorized to RSVP to events for this book club"
+        "You are not a member of this book club yet. Join the club to RSVP to events."
       );
     }
 
