@@ -63,8 +63,16 @@ exports.createEvent = async (req, res, next) => {
 exports.rsvpToEvent = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    const eventId = req.params.eventId;
+    const { clubId, eventId } = req.params;
     const { rsvpStatus } = req.body;
+
+    const isMember = req.user.clubsJoined.includes(clubId);
+    if (!isMember) {
+      return sendError(
+        res,
+        "You are not authorized to RSVP to events for this book club"
+      );
+    }
 
     const updatedEvent = await eventService.rsvpToEvent(
       userId,
