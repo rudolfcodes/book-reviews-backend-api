@@ -71,6 +71,29 @@ class EventService {
 
     return newEvent;
   }
+
+  async rsvpToEvent(userId, eventId, rsvpStatus) {
+    if (!userId || !eventId) {
+      throw new Error("User ID and Event ID are required for RSVP.");
+    }
+
+    const event = await Event.findByIdAndUpdate(eventId, {
+      $pull: { attendees: { userId: new mongoose.Types.ObjectId(userId) } },
+    });
+
+    if (!event) {
+      throw new Error("Event not found.");
+    }
+
+    event.attendees.push({
+      userId: userId,
+      rsvpStatus: rsvpStatus,
+      rsvpAt: new Date(),
+    });
+    await event.save();
+
+    return event;
+  }
 }
 
 module.exports = new EventService();
