@@ -60,6 +60,30 @@ exports.createEvent = async (req, res, next) => {
   }
 };
 
+exports.updateEvent = async (req, res, next) => {
+  try {
+    const { clubId, eventId } = req.params;
+
+    const event = await eventService.getEventById(eventId);
+    if (!event || event.clubId.toString() !== clubId) {
+      return sendError(res, "Event not found in this book club", 404);
+    }
+    const isOwner = req.user.clubsCreated.includes(clubId);
+    if (!isOwner) {
+      return sendError(
+        res,
+        "You are not authorized to update events for this book club"
+      );
+    }
+
+    const updatedEvent = await eventService.updateEvent(eventId, req.body);
+    sendSuccess(res, updatedEvent, "Event updated successfully", 200);
+  } catch (error) {
+    sendError(res, error, 500, "Failed to update event");
+    next(error);
+  }
+};
+
 exports.rsvpToEvent = async (req, res, next) => {
   try {
     const userId = req.user._id;
