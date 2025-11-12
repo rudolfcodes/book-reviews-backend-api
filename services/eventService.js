@@ -57,6 +57,10 @@ class EventService {
     };
   }
 
+  async getEventById(eventId) {
+    return await Event.findById(eventId);
+  }
+
   async createEvent(eventData) {
     const newEvent = new Event({
       ...eventData,
