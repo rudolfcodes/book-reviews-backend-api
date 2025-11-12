@@ -78,9 +78,27 @@ class EventService {
   }
 
   async updateEvent(eventId, updateData) {
+    const allowedFields = [
+      "title",
+      "description",
+      "date",
+      "location",
+      "book",
+      "maxAttendees",
+      "status",
+      "language",
+    ];
+    const filteredData = {};
+
+    for (const key of allowedFields) {
+      if (key in updateData) {
+        filteredData[key] = updateData[key];
+      }
+    }
+
     const updatedEvent = await Event.findByIdAndUpdate(
       eventId,
-      { $set: updateData },
+      { $set: filteredData },
       { new: true }
     );
 
