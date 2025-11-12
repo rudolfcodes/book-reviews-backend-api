@@ -59,3 +59,30 @@ exports.createEvent = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.rsvpToEvent = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { clubId, eventId } = req.params;
+    const { rsvpStatus } = req.body;
+
+    const isMember = req.user.clubsJoined.includes(clubId);
+    if (!isMember) {
+      return sendError(
+        res,
+        "You are not a member of this book club yet. Join the club to RSVP to events."
+      );
+    }
+
+    const updatedEvent = await eventService.rsvpToEvent(
+      userId,
+      eventId,
+      rsvpStatus
+    );
+
+    sendSuccess(res, updatedEvent, "RSVP updated successfully", 200);
+  } catch (error) {
+    sendError(res, error, 500, "Failed to RSVP to event");
+    next(error);
+  }
+};

@@ -1,5 +1,6 @@
 const Event = require("../models/Event");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 
 class EventService {
   async getEvents(filters, options) {
@@ -70,6 +71,39 @@ class EventService {
     });
 
     return newEvent;
+  }
+
+  async rsvpToEvent(userId, eventId, rsvpStatus) {
+    if (!userId || !eventId) {
+      throw new Error("User ID and Event ID are required for RSVP.");
+    }
+
+    const event = await Event.findByIdAndUpdate(
+      { _id: eventId },
+      {
+        $pull: { attendees: { userId: userId.toString() } },
+      }
+    );
+
+    if (!event) {
+      throw new Error("Event not found.");
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      eventId,
+      {
+        $push: {
+          attendees: {
+            userId: new mongoose.Types.ObjectId(userId),
+            rsvpStatus: rsvpStatus,
+            rsvpAt: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    return updatedEvent;
   }
 }
 
