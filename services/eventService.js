@@ -73,6 +73,19 @@ class EventService {
     return newEvent;
   }
 
+  async updateEvent(eventId, updateData) {
+    const updatedEvent = await Event.findByIdAndUpdate(
+      eventId,
+      { $set: updateData },
+      { new: true }
+    );
+
+    if (!updatedEvent) {
+      throw new Error("Event not found.");
+    }
+    return updatedEvent;
+  }
+
   async rsvpToEvent(userId, eventId, rsvpStatus) {
     if (!userId || !eventId) {
       throw new Error("User ID and Event ID are required for RSVP.");
