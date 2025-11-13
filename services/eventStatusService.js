@@ -31,6 +31,22 @@ class EventStatusService {
       ongoingEvents,
     };
   }
+
+  async cancelEvent(eventId, userId) {
+    const event = await Event.findById(eventId);
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    if (event.createdBy.toString() !== userId.toString()) {
+      throw new Error("Only the event creator can cancel the event");
+    }
+    if (event.status === "completed" || event.status === "cancelled") {
+      throw new Error("Cannot cancel a completed or already cancelled event");
+    }
+    event.status = "cancelled";
+    await event.save();
+    return event;
+  }
 }
 
 module.exports = new EventStatusService();
