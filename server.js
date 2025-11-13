@@ -40,11 +40,11 @@ app.use(
   })
 );
 
-app.use(errorHandler);
 app.use("/api/users", userRoutes);
 app.use("/api/bookclubs", bookClubRoutes);
 app.use("/api/cities", cityRoutes);
 app.use("/api/events", eventRoutes);
+app.use(errorHandler);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
