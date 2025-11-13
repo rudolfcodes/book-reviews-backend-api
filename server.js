@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./swagger");
 const errorHandler = require("./middlewares/errorHandler");
+require("./schedulers/eventScheduler"); // Start the cron job
 
 const app = express();
 app.use(cookieParser());
