@@ -15,6 +15,22 @@ class EventStatusService {
 
     return eventsToUpdate.length;
   }
+
+  async getEventStats() {
+    const totalEvents = await Event.countDocuments();
+    const upcomingEvents = await Event.countDocuments({ status: "upcoming" });
+    const completedEvents = await Event.countDocuments({ status: "completed" });
+    const cancelledEvents = await Event.countDocuments({ status: "cancelled" });
+    const ongoingEvents = await Event.countDocuments({ status: "ongoing" });
+
+    return {
+      totalEvents,
+      upcomingEvents,
+      completedEvents,
+      cancelledEvents,
+      ongoingEvents,
+    };
+  }
 }
 
 module.exports = new EventStatusService();
