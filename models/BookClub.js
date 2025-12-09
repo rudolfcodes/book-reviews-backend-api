@@ -94,7 +94,7 @@ const bookClubSchema = new mongoose.Schema(
     },
 
     // LOCALIZATION:
-    language: { type: String, enum: ["en", "de", "fr"], default: "en" },
+    language: { type: String, enum: ["en", "de", "fr", "it"], default: "en" },
   },
   {
     timestamps: true,
