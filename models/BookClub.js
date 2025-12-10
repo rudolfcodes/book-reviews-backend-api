@@ -33,7 +33,11 @@ const bookClubSchema = new mongoose.Schema(
         title: String,
         author: String,
         isbn: String,
-        language: { type: String, enum: ["en", "de", "fr"], default: "en" },
+        language: {
+          type: String,
+          enum: ["en", "de", "fr", "it"],
+          default: "en",
+        },
         clubProgress: {
           status: {
             type: String,
