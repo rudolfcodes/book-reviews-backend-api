@@ -55,8 +55,12 @@ class ClubService {
   }
 
   async createClub(clubData, userId) {
+    // Remove empty string values
+    const cleanedData = Object.fromEntries(
+      Object.entries(clubData).filter(([_, value]) => value !== "")
+    );
     const newClub = new BookClub({
-      ...clubData,
+      ...cleanedData,
       creator: userId,
       members: [{ userId, role: "admin" }], // Add creator as admin
     });
