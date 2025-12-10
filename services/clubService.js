@@ -54,20 +54,7 @@ class ClubService {
     };
   }
 
-  async doesClubExist(clubName, city) {
-    const regex = new RegExp(`^${clubName}$`, "i"); // Case-insensitive match
-    return await BookClub.exists({ name: regex, "location.city": city });
-  }
-
   async createClub(clubData, userId) {
-    const existingClub = await this.doesClubExist(
-      clubData.name,
-      clubData.location.city
-    );
-    if (existingClub) {
-      throw new Error("A club with this name already exists in this city.");
-    }
-
     const newClub = new BookClub({
       ...clubData,
       creator: userId,
