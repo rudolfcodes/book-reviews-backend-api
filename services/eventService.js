@@ -140,6 +140,14 @@ class EventService {
 
     return updatedEvent;
   }
+
+  async deleteEvent(eventId) {
+    const event = await Event.findByIdAndDelete(eventId);
+    if (!event) {
+      throw new Error("Event not found.");
+    }
+    return event;
+  }
 }
 
 module.exports = new EventService();
