@@ -13,6 +13,16 @@ router.post("/", auth, bookClubController.createBookClub);
 router.post("/:clubId/join", auth, bookClubController.joinBookClub);
 router.post("/:clubId/leave", auth, bookClubController.leaveBookClub);
 router.post("/:clubId/events", auth, eventController.createEvent);
+router.put(
+  "/:clubId/events/:eventId/update",
+  auth,
+  eventController.updateEvent
+);
+router.delete(
+  "/:clubId/events/:eventId/delete",
+  auth,
+  eventController.deleteEvent
+);
 router.put("/:clubId/events/:eventId/rsvp", auth, eventController.rsvpToEvent);
 router.get("/:clubId/members", auth, bookClubController.getClubMembers);
 
