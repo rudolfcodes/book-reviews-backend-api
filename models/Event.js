@@ -19,7 +19,7 @@ const eventSchema = new mongoose.Schema(
       },
       venueType: {
         type: String,
-        enum: ["library", "cafe", "home", "park", "in-person", "online"],
+        enum: ["hybrid", "in-person", "online"],
       },
       ethLibraryId: String, // From ETH Library API
     },
@@ -58,7 +58,7 @@ const eventSchema = new mongoose.Schema(
       enum: ["upcoming", "ongoing", "completed", "cancelled"],
       default: "upcoming",
     },
-    language: { type: String, enum: ["en", "de", "fr"], default: "en" },
+    language: { type: String, enum: ["en", "de", "fr", "it"], default: "en" },
   },
   {
     timestamps: true, // Automatically manage createdAt and updatedAt

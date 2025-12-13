@@ -57,6 +57,10 @@ class EventService {
     };
   }
 
+  async getEventById(eventId) {
+    return await Event.findById(eventId);
+  }
+
   async createEvent(eventData) {
     const newEvent = new Event({
       ...eventData,
@@ -71,6 +75,37 @@ class EventService {
     });
 
     return newEvent;
+  }
+
+  async updateEvent(eventId, updateData) {
+    const allowedFields = [
+      "title",
+      "description",
+      "date",
+      "location",
+      "book",
+      "maxAttendees",
+      "status",
+      "language",
+    ];
+    const filteredData = {};
+
+    for (const key of allowedFields) {
+      if (key in updateData) {
+        filteredData[key] = updateData[key];
+      }
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      eventId,
+      { $set: filteredData },
+      { new: true }
+    );
+
+    if (!updatedEvent) {
+      throw new Error("Event not found.");
+    }
+    return updatedEvent;
   }
 
   async rsvpToEvent(userId, eventId, rsvpStatus) {
@@ -104,6 +139,18 @@ class EventService {
     );
 
     return updatedEvent;
+  }
+
+  async cancelEvent(eventId) {
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      { status: "cancelled" },
+      { new: true }
+    );
+    if (!event) {
+      throw new Error("Event not found.");
+    }
+    return event;
   }
 }
 

@@ -85,7 +85,7 @@ exports.rsvpToMeeting = async (req, res) => {
   try {
     const { clubId } = req.params;
     const userId = req.user._id;
-    const { rsvpStatus } = req.body; // e.g. "going", "not going", "maybe"
+    const { rsvpStatus } = req.body;
     const club = await clubService.getClubById(clubId);
 
     await clubService.rsvpToMeeting(userId, clubId, rsvpStatus);

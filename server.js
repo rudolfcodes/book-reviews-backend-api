@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpecs = require("./swagger");
 const errorHandler = require("./middlewares/errorHandler");
+require("./schedulers/eventScheduler"); // Start the cron job
 
 const app = express();
 app.use(cookieParser());
@@ -39,11 +40,11 @@ app.use(
   })
 );
 
-app.use(errorHandler);
 app.use("/api/users", userRoutes);
 app.use("/api/bookclubs", bookClubRoutes);
 app.use("/api/cities", cityRoutes);
 app.use("/api/events", eventRoutes);
+app.use(errorHandler);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));

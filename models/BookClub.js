@@ -21,7 +21,7 @@ const bookClubSchema = new mongoose.Schema(
       },
       venueType: {
         type: String,
-        enum: ["library", "cafe", "home", "park", "other"],
+        enum: ["online", "hybrid", "in-person"],
       },
       ethLibraryId: String,
     },
@@ -33,7 +33,11 @@ const bookClubSchema = new mongoose.Schema(
         title: String,
         author: String,
         isbn: String,
-        language: { type: String, enum: ["en", "de", "fr"], default: "en" },
+        language: {
+          type: String,
+          enum: ["en", "de", "fr", "it"],
+          default: "en",
+        },
         clubProgress: {
           status: {
             type: String,
@@ -65,11 +69,6 @@ const bookClubSchema = new mongoose.Schema(
           enum: ["admin", "moderator", "member"],
           default: "member",
         },
-        rsvpStatus: {
-          type: String,
-          enum: ["attending", "maybe", "not_attending", "pending"],
-          default: "pending",
-        },
       },
     ],
 
@@ -94,7 +93,7 @@ const bookClubSchema = new mongoose.Schema(
     },
 
     // LOCALIZATION:
-    language: { type: String, enum: ["en", "de", "fr"], default: "en" },
+    language: { type: String, enum: ["en", "de", "fr", "it"], default: "en" },
   },
   {
     timestamps: true,
