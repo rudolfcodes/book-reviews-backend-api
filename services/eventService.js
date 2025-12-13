@@ -141,8 +141,12 @@ class EventService {
     return updatedEvent;
   }
 
-  async deleteEvent(eventId) {
-    const event = await Event.findByIdAndDelete(eventId);
+  async cancelEvent(eventId) {
+    const event = await Event.findByIdAndUpdate(
+      eventId,
+      { status: "cancelled" },
+      { new: true }
+    );
     if (!event) {
       throw new Error("Event not found.");
     }

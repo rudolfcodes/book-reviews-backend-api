@@ -84,6 +84,29 @@ exports.updateEvent = async (req, res, next) => {
   }
 };
 
+exports.cancelEvent = async (req, res, next) => {
+  try {
+    const { eventId, clubId } = req.params;
+    const event = await eventService.getEventById(eventId);
+    if (!event || event.clubId.toString() !== clubId) {
+      return sendError(res, "Event not found in this book club", 404);
+    }
+    const isOwner = req.user.clubsCreated.includes(clubId);
+    if (!isOwner) {
+      return sendError(
+        res,
+        "You are not authorized to cancel events for this book club"
+      );
+    }
+
+    await eventService.cancelEvent(eventId);
+    sendSuccess(res, null, "Event cancelled successfully", 200);
+  } catch (error) {
+    sendError(res, error, 500, "Failed to cancel event");
+    next(error);
+  }
+};
+
 exports.rsvpToEvent = async (req, res, next) => {
   try {
     const userId = req.user._id;

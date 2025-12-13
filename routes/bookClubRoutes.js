@@ -19,9 +19,9 @@ router.put(
   eventController.updateEvent
 );
 router.delete(
-  "/:clubId/events/:eventId/delete",
+  "/:clubId/events/:eventId/cancel",
   auth,
-  eventController.deleteEvent
+  eventController.cancelEvent
 );
 router.put("/:clubId/events/:eventId/rsvp", auth, eventController.rsvpToEvent);
 router.get("/:clubId/members", auth, bookClubController.getClubMembers);
