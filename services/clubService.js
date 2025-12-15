@@ -1,6 +1,7 @@
 const BookClub = require("../models/BookClub");
 const { validateObjectId } = require("../utils/validation");
 const User = require("../models/User");
+const { generateSlug } = require("../utils/url-helpers");
 
 class ClubService {
   async getClubs(filters = {}, pagination) {
@@ -59,10 +60,22 @@ class ClubService {
     const cleanedData = Object.fromEntries(
       Object.entries(clubData).filter(([_, value]) => value !== "")
     );
+
+    const slug = generateSlug(cleanedData.name);
+
+    // handle duplicate slugs
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (await BookClub.findOne({ slug: uniqueSlug })) {
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+
     const newClub = new BookClub({
       ...cleanedData,
       creator: userId,
-      members: [{ userId, role: "admin" }], // Add creator as admin
+      members: [{ userId, role: "admin" }],
+      slug: uniqueSlug,
     });
 
     await newClub.save();
@@ -98,11 +111,21 @@ class ClubService {
       throw new Error("No valid fields to update");
     }
 
+    // update slug if name is changed
+    if (updateData.name) {
+      const updatedSlug = generateSlug(updateData.name);
+      let uniqueSlug = updatedSlug;
+      let counter = 1;
+      while (
+        await BookClub.findOne({ slug: uniqueSlug, _id: { $ne: clubId } })
+      ) {
+        uniqueSlug = `${updatedSlug}-${counter}`;
+        counter++;
+      }
+      updateData.slug = uniqueSlug;
+    }
+
     await BookClub.updateOne({ _id: clubId }, { $set: updateData });
-    // await this.updateClubMembers(
-    //   updateData.members.map((member) => member.userId.toString()),
-    //   clubId
-    // );
 
     return await this.getClubById(clubId);
   }
@@ -132,6 +155,14 @@ class ClubService {
   async getClubById(clubId) {
     validateObjectId(clubId, "Club ID");
     const club = await BookClub.findById(clubId);
+    if (!club) {
+      throw new Error("Book club not found");
+    }
+    return club;
+  }
+
+  async getClubBySlug(slug) {
+    const club = await BookClub.findOne({ slug: slug });
     if (!club) {
       throw new Error("Book club not found");
     }
