@@ -1,6 +1,7 @@
 const BookClub = require("../models/BookClub");
 const { validateObjectId } = require("../utils/validation");
 const User = require("../models/User");
+const { generateSlug } = require("../utils/url-helpers");
 
 class ClubService {
   async getClubs(filters = {}, pagination) {
@@ -59,10 +60,22 @@ class ClubService {
     const cleanedData = Object.fromEntries(
       Object.entries(clubData).filter(([_, value]) => value !== "")
     );
+
+    const slug = generateSlug(cleanedData.name);
+
+    // handle duplicate slugs
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (await BookClub.findOne({ slug: uniqueSlug })) {
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+
     const newClub = new BookClub({
       ...cleanedData,
       creator: userId,
-      members: [{ userId, role: "admin" }], // Add creator as admin
+      members: [{ userId, role: "admin" }],
+      slug: uniqueSlug,
     });
 
     await newClub.save();
