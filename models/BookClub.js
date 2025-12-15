@@ -3,6 +3,12 @@ const mongoose = require("mongoose");
 const bookClubSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+    slug: {
+      type: String,
+      unique: true,
+      required: true,
+      index: true,
+    },
     description: { type: String, required: true },
     creator: {
       type: mongoose.Schema.Types.ObjectId,
