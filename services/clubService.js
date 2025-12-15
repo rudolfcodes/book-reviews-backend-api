@@ -111,11 +111,21 @@ class ClubService {
       throw new Error("No valid fields to update");
     }
 
+    // update slug if name is changed
+    if (updateData.name) {
+      const updatedSlug = generateSlug(updateData.name);
+      let uniqueSlug = updatedSlug;
+      let counter = 1;
+      while (
+        await BookClub.findOne({ slug: uniqueSlug, _id: { $ne: clubId } })
+      ) {
+        uniqueSlug = `${updatedSlug}-${counter}`;
+        counter++;
+      }
+      updateData.slug = uniqueSlug;
+    }
+
     await BookClub.updateOne({ _id: clubId }, { $set: updateData });
-    // await this.updateClubMembers(
-    //   updateData.members.map((member) => member.userId.toString()),
-    //   clubId
-    // );
 
     return await this.getClubById(clubId);
   }
