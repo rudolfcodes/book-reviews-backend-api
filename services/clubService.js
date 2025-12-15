@@ -162,7 +162,7 @@ class ClubService {
   }
 
   async getClubBySlug(slug) {
-    const club = await BookClub.find({ slug: slug });
+    const club = await BookClub.findOne({ slug: slug });
     if (!club) {
       throw new Error("Book club not found");
     }
