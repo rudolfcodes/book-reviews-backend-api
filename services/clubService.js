@@ -161,6 +161,14 @@ class ClubService {
     return club;
   }
 
+  async getClubBySlug(slug) {
+    const club = await BookClub.find({ slug: slug });
+    if (!club) {
+      throw new Error("Book club not found");
+    }
+    return club;
+  }
+
   async leaveBookClub(userId, clubId) {
     validateObjectId(clubId, "Club ID");
     const club = await this.getClubById(clubId);

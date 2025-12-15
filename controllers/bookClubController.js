@@ -43,6 +43,16 @@ exports.getBookClubById = async (req, res) => {
   }
 };
 
+exports.getBookClubBySlug = async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    const bookClub = await clubService.getClubBySlug(slug);
+    sendSuccess(res, bookClub, "Book club fetched successfully", 200);
+  } catch (error) {
+    sendError(res, error, 500, "Failed to fetch book club");
+  }
+};
+
 exports.createBookClub = async (req, res) => {
   try {
     const userId = req.user._id; // Assuming user is authenticated
