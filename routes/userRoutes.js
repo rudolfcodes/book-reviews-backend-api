@@ -43,6 +43,7 @@ router.post(
 
 router.get("/profile/:userId", auth, userController.getUserPublicProfile);
 router.get("/username/:username", auth, userController.getUserPublicProfile);
+router.get("/:clubId", userController.getUserByClubId);
 router.get("/me", auth, userController.getCurrentUserProfile);
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);

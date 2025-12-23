@@ -252,3 +252,21 @@ exports.getUserByUsername = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch user by username" });
   }
 };
+
+exports.getUserByClubId = async (req, res) => {
+  try {
+    const { clubId } = req.params;
+    const user = await User.findOne({ clubsCreated: clubId }).select(
+      "username email avatar"
+    );
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "User not found for the given club id" });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user by club id");
+    res.status(500).json({ error: "Failed to fetch user by club id" });
+  }
+};
