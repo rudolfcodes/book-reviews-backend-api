@@ -19,6 +19,28 @@ exports.getCitySuggestions = async (req, res, next) => {
         .json({ error: "Query parameter 'search' is required" });
     }
 
+    const cantonPattern = /^[A-Z]{2}$/;
+    if (cantonPattern.test(search)) {
+      const citiesInCanton = SWISS_CITIES.filter(
+        (city) => city.canton === search
+      );
+      if (citiesInCanton.length > 0) {
+        return sendSuccess(
+          res,
+          citiesInCanton,
+          "City suggestions fetched successfully",
+          200
+        );
+      } else {
+        return sendSuccess(
+          res,
+          [],
+          "No cities found for the given canton",
+          200
+        );
+      }
+    }
+
     const postalCodePattern = /^\d{4}$/;
     if (postalCodePattern.test(search)) {
       const city = SWISS_CITIES.find((city) => city.postalCode === search);
