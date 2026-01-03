@@ -3,6 +3,7 @@ const eventService = require("../services/eventService");
 
 exports.getEvents = async (req, res, next) => {
   try {
+    const { clubId } = req.params;
     const {
       currentPage = 1,
       pageSize = 10,
@@ -20,7 +21,10 @@ exports.getEvents = async (req, res, next) => {
       limit: parseInt(pageSize, 10) || parseInt(limit, 10),
       sortBy,
     };
-    const events = await eventService.getEvents(filters, options);
+    const events = await eventService.getEvents(
+      { clubId, ...filters },
+      options
+    );
 
     if (!events || events.length === 0) {
       return res.status(404).json({ message: "No events found" });

@@ -5,9 +5,10 @@ const mongoose = require("mongoose");
 class EventService {
   async getEvents(filters, options) {
     const { page, limit, sortBy } = options;
-    const { location, language, title, dateRange } = filters;
+    const { clubId, location, language, title, dateRange } = filters;
     const filter = {};
 
+    if (clubId) filter.clubId = clubId;
     if (location) filter.location = location;
     if (language) filter.language = language;
     if (title) filter.title = { $regex: title, $options: "i" }; // Case-insensitive search
