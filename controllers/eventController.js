@@ -28,7 +28,6 @@ exports.getEvents = async (req, res, next) => {
     sendSuccess(res, events, "Events fetched successfully", 200);
   } catch (error) {
     sendError(res, error, 500, "Failed to fetch events");
-    next(error);
   }
 };
 
@@ -56,7 +55,6 @@ exports.createEvent = async (req, res, next) => {
     sendSuccess(res, newEvent, "Event created successfully", 201);
   } catch (error) {
     sendError(res, error, 500, "Failed to create event");
-    next(error);
   }
 };
 
@@ -80,7 +78,6 @@ exports.updateEvent = async (req, res, next) => {
     sendSuccess(res, updatedEvent, "Event updated successfully", 200);
   } catch (error) {
     sendError(res, error, 500, "Failed to update event");
-    next(error);
   }
 };
 
@@ -103,7 +100,6 @@ exports.cancelEvent = async (req, res, next) => {
     sendSuccess(res, null, "Event cancelled successfully", 200);
   } catch (error) {
     sendError(res, error, 500, "Failed to cancel event");
-    next(error);
   }
 };
 
@@ -130,6 +126,5 @@ exports.rsvpToEvent = async (req, res, next) => {
     sendSuccess(res, updatedEvent, "RSVP updated successfully", 200);
   } catch (error) {
     sendError(res, error, 500, "Failed to RSVP to event");
-    next(error);
   }
 };
