@@ -23,12 +23,8 @@ exports.getBookClubs = async (req, res, next) => {
     };
     const bookClubs = await clubService.getClubs(filters, options);
 
-    if (!bookClubs || bookClubs.length === 0) {
-      return res.status(404).json({ message: "No book clubs found" });
-    }
     sendSuccess(res, bookClubs, "Book clubs fetched successfully", 200);
   } catch (error) {
-    next(error);
     sendError(res, error, 500, "Failed to fetch book clubs");
   }
 };
