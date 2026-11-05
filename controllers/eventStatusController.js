@@ -12,7 +12,6 @@ exports.updateExpiredEvents = async (req, res, next) => {
     );
   } catch (error) {
     sendError(res, error, 500, "Failed to update expired events");
-    next(error);
   }
 };
 
@@ -22,6 +21,5 @@ exports.getEventStats = async (req, res, next) => {
     sendSuccess(res, stats, "Event statistics retrieved successfully", 200);
   } catch (error) {
     sendError(res, error, 500, "Failed to retrieve event statistics");
-    next(error);
   }
 };
