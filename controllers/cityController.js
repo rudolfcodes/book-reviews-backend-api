@@ -50,7 +50,6 @@ exports.getCitySuggestions = async (req, res, next) => {
     );
     sendSuccess(res, suggestions, "City suggestions fetched successfully", 200);
   } catch (error) {
-    next(error);
     sendError(res, error, 500, "Failed to fetch city suggestions");
   }
 };
